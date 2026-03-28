@@ -6,39 +6,14 @@
   <title>Bitcoin Quiz — Presentador</title>
   <link rel="stylesheet" href="styles.css" />
   <style>
-    /* Explicit centering so screens don't drift when a scrollbar appears */
-    .host-container { width: 100%; max-width: 760px; margin: 0 auto; }
-    .question-host-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      width: 100%;
-      max-width: 860px;
-      align-items: start;
-      margin: 0 auto;
-    }
-    @media (max-width: 600px) { .question-host-grid { grid-template-columns: 1fr; } }
-    /* All host screens: start from the top and center content horizontally */
-    #screen-lobby, #screen-question, #screen-results, #screen-final {
-      justify-content: flex-start;
-      align-items: center;
+    .host-container { width: 100%; max-width: 1100px; margin: 0 auto; }
+    /* Host screens: block layout so margin:0 auto on host-container reliably centers */
+    #screen-lobby.active, #screen-question.active, #screen-results.active, #screen-final.active {
+      display: block;
       padding-top: 28px;
+      padding-bottom: 28px;
     }
-    .stat-fill.ans-0 { background: var(--ans-0); }
-    .stat-fill.ans-1 { background: var(--ans-1); }
-    .stat-fill.ans-2 { background: var(--ans-2); }
-    .stat-fill.ans-3 { background: var(--ans-3); }
     .answered-count { font-size: .9rem; color: var(--muted); text-align: center; margin-top: 6px; }
-    .correct-pill {
-      display: inline-block;
-      background: var(--correct);
-      color: #fff;
-      border-radius: 99px;
-      padding: 3px 14px;
-      font-size: .85rem;
-      font-weight: 700;
-      margin-left: 8px;
-    }
   </style>
 </head>
 <body>
@@ -61,8 +36,8 @@
 
 <!-- ════════════════════════════════════════════════════════ SALA ══ -->
 <div class="screen" id="screen-lobby">
-  <div class="host-container">
-    <p class="logo" style="font-size:1.8rem;margin-bottom:2px">₿<span>Quiz</span></p>
+  <div class="host-container" style="max-width:580px">
+    <p class="logo" style="font-size:1.8rem;margin-bottom:12px">₿<span>Quiz</span></p>
 
     <div class="card" style="text-align:center;margin-bottom:14px">
       <p class="section-title">Código de Sala</p>
@@ -72,14 +47,13 @@
         <img id="lobby-qr-img" src="" alt="Código QR" width="200" height="200" />
       </div>
 
-      <!-- Join URL displayed prominently so participants can type it manually -->
       <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 16px;margin-top:4px">
         <p style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">O entra desde tu navegador en</p>
         <p id="lobby-join-url" style="font-family:monospace;font-size:1rem;color:var(--accent);font-weight:700;word-break:break-all"></p>
       </div>
     </div>
 
-    <div class="card" style="margin-bottom:14px">
+    <div class="card">
       <p class="section-title">Jugadores conectados: <span id="player-count" style="color:var(--accent)">0</span></p>
       <div class="player-list" id="player-list">
         <em class="text-muted" style="font-size:.88rem">Esperando participantes…</em>
@@ -87,12 +61,14 @@
       <button class="btn btn-primary" id="btn-start-quiz" disabled>Iniciar Quiz</button>
       <p id="lobby-hint" class="text-center text-muted mt-sm" style="font-size:.85rem">Se necesita al menos 1 jugador</p>
     </div>
+
   </div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ PREGUNTA ══ -->
 <div class="screen" id="screen-question">
-  <div class="host-container">
+  <div class="host-container" style="max-width:580px">
+
     <div class="card" style="margin-bottom:14px">
       <p class="question-counter" id="host-q-counter">Pregunta 1 de 25</p>
 
@@ -105,8 +81,6 @@
 
       <div class="question-text" id="host-q-text" style="font-size:1.1rem;margin-bottom:12px"></div>
 
-      <p id="host-correct-hint" class="text-muted" style="font-size:.9rem;margin-bottom:10px"></p>
-
       <p class="answered-count" id="host-answered-count">0 / 0 respondieron</p>
       <button class="btn btn-secondary btn-sm" id="btn-force-end" style="margin-top:10px;width:100%">
         Terminar Pregunta Ahora
@@ -117,38 +91,40 @@
       <p class="section-title">Marcador actual</p>
       <div class="leaderboard" id="host-live-leaderboard"></div>
     </div>
+
   </div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════ RESULTADOS ══ -->
 <div class="screen" id="screen-results">
-  <div class="host-container">
-    <div class="card" style="margin-bottom:14px">
-      <p class="section-title">Resultados — <span id="res-q-label"></span></p>
+  <div class="host-container" style="max-width:580px">
 
-      <div id="res-correct-callout" style="margin-bottom:12px;padding:12px 16px;background:rgba(38,137,12,.15);border:1px solid var(--correct);border-radius:10px;">
-        <strong style="color:#4cdc5b">Respuesta correcta:</strong>
-        <span id="res-correct-text"></span>
+    <div class="card" style="margin-bottom:14px;text-align:center">
+      <p class="question-counter" style="margin-bottom:8px">Pregunta <span id="res-q-label"></span></p>
+      <p id="res-q-text" style="font-size:1.15rem;font-weight:700;line-height:1.4;margin-bottom:18px;color:var(--text)"></p>
+      <div style="padding:16px 20px;background:rgba(57,255,20,.07);border:1px solid rgba(57,255,20,.4);border-radius:12px;box-shadow:0 0 24px rgba(57,255,20,.12)">
+        <p style="font-size:.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px">✓ Respuesta correcta</p>
+        <p id="res-correct-text" style="font-size:1.5rem;font-weight:900;color:var(--correct);text-shadow:0 0 18px rgba(57,255,20,.5)"></p>
       </div>
-
-      <p class="explanation" id="res-explanation" style="margin:0"></p>
     </div>
+
+    <div class="explanation" id="res-explanation" style="max-width:100%;margin-bottom:14px"></div>
 
     <div class="card" style="margin-bottom:14px">
       <p class="section-title">Marcador</p>
       <div class="leaderboard" id="res-leaderboard"></div>
     </div>
 
-    <!-- Auto-advance countdown -->
-    <div style="text-align:center;margin-bottom:12px">
-      <p style="font-size:1.1rem;color:var(--muted)">
+    <div style="text-align:center;margin-bottom:8px">
+      <p style="font-size:1rem;color:var(--muted);margin-bottom:8px">
         Siguiente pregunta en <strong style="color:var(--accent)" id="advance-countdown">7</strong>s…
       </p>
-      <div class="timer-track" style="max-width:300px;margin:8px auto 0">
+      <div class="timer-track" style="max-width:260px;margin:0 auto">
         <div class="timer-bar" id="advance-bar" style="width:100%"></div>
       </div>
     </div>
-    <button class="btn" id="btn-end-quiz-early" style="max-width:320px;display:block;margin:0 auto;background:var(--accent2);color:#fff;box-shadow:0 0 18px rgba(255,119,0,.5),0 4px 20px rgba(255,119,0,.3)">Terminar Quiz</button>
+    <button class="btn" id="btn-end-quiz-early" style="width:100%;background:var(--accent2);color:#fff;box-shadow:0 0 18px rgba(255,119,0,.5),0 4px 20px rgba(255,119,0,.3)">Terminar Quiz</button>
+
   </div>
 </div>
 
@@ -157,12 +133,11 @@
   <div class="host-container">
     <p class="logo" style="font-size:2rem;margin-bottom:12px">₿<span>Quiz</span></p>
 
-    <div class="winner-card" style="margin-bottom:16px">
+    <div class="winner-card" style="margin-bottom:16px;max-width:540px;margin-left:auto;margin-right:auto">
       <p style="font-size:2rem;margin-bottom:6px">🎉</p>
       <p class="winner-name" id="final-winner-name"></p>
       <p class="winner-sats" id="final-winner-sats"></p>
 
-      <!-- Factura Lightning (si está configurada) -->
       <div id="lightning-invoice-section" style="display:none">
         <p class="section-title" style="margin-bottom:8px">Factura Lightning</p>
         <div class="qr-wrap" id="invoice-qr-wrap" style="display:none;margin:0 auto 10px">
@@ -174,7 +149,6 @@
         </button>
       </div>
 
-      <!-- Modo manual (sin Lightning) -->
       <div id="manual-payout-section" style="display:none">
         <p style="color:var(--muted);font-size:.9rem;margin-bottom:6px">
           Lightning no configurado — paga manualmente:
@@ -183,12 +157,12 @@
       </div>
     </div>
 
-    <div class="card" style="margin-bottom:14px;max-width:480px;margin-left:auto;margin-right:auto">
+    <div class="card" style="margin-bottom:14px;max-width:540px;margin-left:auto;margin-right:auto">
       <p class="section-title">Clasificación Final</p>
       <div class="leaderboard" id="final-leaderboard"></div>
     </div>
 
-    <button class="btn btn-secondary" id="btn-restart" style="max-width:480px;margin:0 auto;display:block">Nuevo Quiz</button>
+    <button class="btn btn-secondary" id="btn-restart" style="max-width:540px;margin:0 auto;display:block">Nuevo Quiz</button>
   </div>
 </div>
 
@@ -201,6 +175,7 @@
   const socket = io();
   let cancelTimer = null;
   let currentOptions = [];
+  let currentQuestion = "";
   let lastLeaderboard = [];
 
   // Obtener info del servidor al cargar
@@ -291,11 +266,10 @@
 
   socket.on("question_started", ({ index, total, text, options, correct, explanation, timeLimit, totalPlayers }) => {
     currentOptions = options;
+    currentQuestion = text;
 
     document.getElementById("host-q-counter").textContent = `Pregunta ${index + 1} de ${total}`;
     document.getElementById("host-q-text").textContent = text;
-    document.getElementById("host-correct-hint").innerHTML =
-      `Correcta: <strong style="color:#4cdc5b">${esc(options[correct])}</strong>`;
     document.getElementById("host-answered-count").textContent = `0 / ${totalPlayers} respondieron`;
     document.getElementById("host-live-leaderboard").innerHTML = buildLeaderboard(lastLeaderboard);
 
@@ -313,8 +287,9 @@
   socket.on("question_ended", ({ correct, explanation, stats, leaderboard, questionIndex, isLastQuestion }) => {
     if (cancelTimer) { cancelTimer(); cancelTimer = null; }
 
-    document.getElementById("res-q-label").textContent = `Pregunta ${questionIndex + 1}`;
-    document.getElementById("res-correct-text").textContent = " " + (currentOptions[correct] || "");
+    document.getElementById("res-q-label").textContent = questionIndex + 1;
+    document.getElementById("res-q-text").textContent = currentQuestion;
+    document.getElementById("res-correct-text").textContent = currentOptions[correct] || "";
     document.getElementById("res-explanation").textContent = explanation || "";
 
     lastLeaderboard = leaderboard;

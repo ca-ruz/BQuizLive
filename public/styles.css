@@ -11,12 +11,6 @@
   --muted:     #8866cc;
   --border:    #1a2e1c;
 
-  /* Answer button colours */
-  --ans-0:     #ff7700;   /* neon orange   */
-  --ans-1:     #4cc9f0;   /* electric blue */
-  --ans-2:     #b044ff;   /* neon purple   */
-  --ans-3:     #39ff14;   /* electric green */
-
   --correct:   #39ff14;
   --incorrect: #ff3300;
 
@@ -143,27 +137,27 @@ input[type="text"]::placeholder { color: var(--muted); }
 .answer-btn:disabled { cursor: default; }
 
 .answer-btn.ans-0 {
-  background: linear-gradient(155deg, #ffff00 0%, #cc8800 100%);
-  border-top: 1px solid rgba(255,255,100,.5);
-  box-shadow: 0 0 12px rgba(255,220,0,.45), 0 4px 14px rgba(0,0,0,.35);
-  color: #1a1000;
+  background: linear-gradient(155deg, #ffff00 0%, #aaaa00 100%);
+  border-top: 2px solid rgba(255,255,0,.7);
+  box-shadow: 0 0 10px rgba(255,255,0,.45), 0 0 36px rgba(255,255,0,.18), 0 4px 14px rgba(0,0,0,.4);
+  color: #1a1a00;
 }
 .answer-btn.ans-1 {
-  background: linear-gradient(155deg, #00eeff 0%, #0044dd 100%);
-  border-top: 1px solid rgba(0,240,255,.5);
-  box-shadow: 0 0 12px rgba(0,200,255,.45), 0 4px 14px rgba(0,0,0,.35);
-  color: #000d18;
+  background: linear-gradient(155deg, #00ffff 0%, #0066bb 100%);
+  border-top: 2px solid rgba(0,255,255,.7);
+  box-shadow: 0 0 10px rgba(0,230,255,.45), 0 0 36px rgba(0,230,255,.18), 0 4px 14px rgba(0,0,0,.4);
+  color: #001018;
 }
 .answer-btn.ans-2 {
-  background: linear-gradient(155deg, #dd55ff 0%, #5500bb 100%);
-  border-top: 1px solid rgba(220,100,255,.5);
-  box-shadow: 0 0 12px rgba(190,50,255,.45), 0 4px 14px rgba(0,0,0,.35);
+  background: linear-gradient(155deg, #cc44ff 0%, #5500bb 100%);
+  border-top: 2px solid rgba(200,80,255,.7);
+  box-shadow: 0 0 10px rgba(180,50,255,.45), 0 0 36px rgba(180,50,255,.18), 0 4px 14px rgba(0,0,0,.4);
   color: #0e0018;
 }
 .answer-btn.ans-3 {
-  background: linear-gradient(155deg, #39ff14 0%, #007700 100%);
-  border-top: 1px solid rgba(100,255,50,.5);
-  box-shadow: 0 0 12px rgba(57,255,20,.45), 0 4px 14px rgba(0,0,0,.35);
+  background: linear-gradient(155deg, #39ff14 0%, #228800 100%);
+  border-top: 2px solid rgba(100,255,50,.7);
+  box-shadow: 0 0 10px rgba(57,255,20,.45), 0 0 36px rgba(57,255,20,.18), 0 4px 14px rgba(0,0,0,.4);
   color: #001800;
 }
 

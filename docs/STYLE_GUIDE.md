@@ -203,10 +203,10 @@ All cards, buttons, and code blocks share the same hover philosophy:
 
 | Slot | Variable | Gradient | Glow Color | Text Color |
 |---|---|---|---|---|
-| 0 | `--ans-0` | `#ffff00 → #cc8800` (yellow) | `rgba(255,230,0)` | `#1a1000` (dark warm) |
-| 1 | `--ans-1` | `#00eeff → #0044dd` (cyan→blue) | `rgba(0,200,255)` | `#000d18` (dark cool) |
-| 2 | `--ans-2` | `#dd55ff → #5500bb` (purple) | `rgba(190,50,255)` | `#0e0018` (dark purple) |
-| 3 | `--ans-3` | `#39ff14 → #007700` (green) | `rgba(57,255,20)` | `#001800` (dark green) |
+| 0 | `--ans-0` | `#ffff00 → #aaaa00` (electric yellow) | `rgba(255,255,0)` | `#1a1a00` (dark yellow) |
+| 1 | `--ans-1` | `#00ffff → #0066bb` (cyan) | `rgba(0,230,255)` | `#001018` (dark cyan) |
+| 2 | `--ans-2` | `#cc44ff → #5500bb` (neon purple) | `rgba(180,50,255)` | `#0e0018` (dark purple) |
+| 3 | `--ans-3` | `#39ff14 → #228800` (electric green) | `rgba(57,255,20)` | `#001800` (dark green) |
 
 > **Color order is randomized per question** — `index.html` shuffles `[0,1,2,3]` with Fisher-Yates so no answer position always has the same color.
 
@@ -261,7 +261,7 @@ The host's question card has no colored glow (plain `.card` style).
 
 | I want to change… | Find… |
 |---|---|
-| Answer button colors | `.answer-btn.ans-0/1/2/3` in `styles.css` |
+| Answer button colors | `.answer-btn.ans-0/1/2/3` in `styles.css` — orange/blue/purple/green |
 | Answer button text color | `color:` on each `.answer-btn.ans-X` rule |
 | Turn off color randomization | Remove `colorOrder` shuffle in `index.html` JS |
 | Player question card glow | `.question-text` override in `index.html` `<style>` |
