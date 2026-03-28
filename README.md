@@ -8,9 +8,10 @@ el ganador recibe sats a través de Lightning Network.
 
 ## Características
 
-- Panel del presentador con estadísticas en vivo, marcador y flujo automático
+- Panel del presentador con marcador en vivo y flujo automático
 - Participantes se unen desde su celular con un código de sala o escaneando un QR
-- 25 preguntas de Bitcoin para principiantes con explicaciones
+- ~100 preguntas en 9 categorías: `bitcoin`, `blockchain`, `mining`, `lightning`, `wallets`, `transactions`, `channels`, `lsp`, `dev`
+- Configura las categorías por evento con la variable `CATEGORIES` (ej: `lightning,channels,lsp`)
 - Temporizador de cuenta regresiva con puntuación por velocidad (50–100 pts)
 - La pregunta termina automáticamente cuando alguien responde correctamente, todos han contestado, o se acaba el tiempo
 - Avance automático entre preguntas (o terminar manualmente) — el presentador sólo inicia y observa
@@ -74,7 +75,7 @@ Ingresan su apodo y el código de sala.
 
 1. Espera a que los participantes se unan (aparecen en vivo en tu pantalla).
 2. Haz clic en **Iniciar Quiz**.
-3. La primera pregunta lanza automáticamente con un temporizador de 15 segundos.
+3. La primera pregunta lanza automáticamente con un temporizador de 21 segundos.
 4. La pregunta termina en cuanto alguien responde correctamente, todos han contestado, o se acaba el tiempo.
 5. Se muestran los resultados durante unos segundos (respuesta correcta + explicación + marcador).
 6. La siguiente pregunta inicia sola — no necesitas hacer nada.
@@ -174,13 +175,22 @@ bitcoin-quiz-live/
 ├── public/
 │   ├── host.html        Panel del presentador (todas las pantallas)
 │   ├── index.html       App del jugador (unirse → quiz → resultados)
-│   ├── player.html      Alias → redirige a index.html
-│   ├── styles.css       Estilos compartidos (tema naranja Bitcoin)
+│   ├── styles.css       Estilos compartidos (tema synthwave verde/naranja/azul/púrpura)
 │   └── client.js        Utilidades JS compartidas
 ├── data/
-│   └── questions.js     25 preguntas Bitcoin para principiantes
+│   ├── categories/      Banco de preguntas (~100 preguntas en 9 archivos)
+│   │   ├── bitcoin.js   30 preguntas generales (default)
+│   │   ├── lightning.js, wallets.js, mining.js, blockchain.js ...
+│   └── questions.js     Legacy — mantener como referencia
 ├── docs/
-│   └── index.html       Landing page (GitHub Pages)
+│   ├── index.html       Landing page (GitHub Pages) — solo markup
+│   ├── styles.css       Estilos del sitio web
+│   ├── script.js        JS del sitio web (modales, copiar al portapapeles)
+│   └── STYLE_GUIDE.md   Referencia de colores y componentes
+├── tests/
+│   ├── quizEngine.test.js  77 tests de lógica de sala y puntuación
+│   ├── questions.test.js   54 tests del banco de preguntas
+│   └── lightning.test.js   16 tests de integración Lightning
 ├── .env.example         Plantilla de configuración
 ├── LICENSE              GNU General Public License v3
 └── package.json
@@ -190,7 +200,8 @@ bitcoin-quiz-live/
 
 ## Personalizar preguntas
 
-Edita `data/questions.js`. Cada pregunta tiene esta forma:
+Las preguntas viven en `data/categories/` — un archivo por categoría (`bitcoin.js`, `lightning.js`, etc.).
+Cada pregunta tiene esta forma:
 
 ```js
 {
@@ -201,18 +212,20 @@ Edita `data/questions.js`. Cada pregunta tiene esta forma:
 }
 ```
 
-Puedes tener 3 o 4 opciones por pregunta.
+Puedes tener 3 o 4 opciones por pregunta. Usa la variable `CATEGORIES` en `.env` para elegir qué categorías cargar en cada evento.
 
 ---
 
 ## Variables de entorno
 
 ```env
-PORT=3000                      # Puerto del servidor
-BASE_URL=http://<tu-ip-local>:3000  # URL pública (para el QR); se auto-detecta si se omite
-QUESTION_TIME_LIMIT=15         # Segundos por pregunta
-SAT_PER_POINT=1                # Sats por punto para la recompensa
-QUESTION_COUNT=10              # Preguntas por sesión (selección aleatoria); omitir = 25 (todas)
+PORT=3000                      # Puerto del servidor (default: 3000)
+BASE_URL=http://<tu-ip-local>:3000  # URL pública para el QR; se auto-detecta si se omite
+QUESTION_TIME_LIMIT=21         # Segundos por pregunta (default: 21)
+QUESTION_COUNT=21              # Preguntas por sesión, subconjunto aleatorio (default: 21)
+RESULTS_DELAY=7                # Segundos que se muestra la respuesta correcta (default: 7)
+CATEGORIES=bitcoin             # Categorías a cargar, separadas por coma (default: bitcoin)
+SAT_PER_POINT=1                # Sats por punto para la recompensa (default: 1)
 
 # Lightning (elige UNA opción):
 NWC_URL=nostr+walletconnect://...   # Opción A: NWC
@@ -256,7 +269,7 @@ Actualmente el proyecto está pensado para **meetups y eventos presenciales** do
 - [ ] **Wallet configurada en el servidor** — con NWC o LND ya configurado en el servidor remoto, los pagos ocurren automáticamente sin que el organizador esté presente.
 - [ ] **Múltiples salas simultáneas** — que distintos grupos puedan jugar al mismo tiempo en el mismo servidor público.
 - [ ] **Protección anti-spam** — rate limiting en joins y creación de salas para uso en internet abierto.
-- [ ] **Preguntas por categoría o dificultad** — permitir que los jugadores o el organizador elijan el tema (historia, técnico, Lightning, etc.).
+- [x] **Preguntas por categoría** — 9 categorías disponibles, seleccionables con la variable `CATEGORIES` en `.env`.
 - [ ] **Más idiomas** — internacionalización para llegar a comunidades Bitcoin de habla no española.
 
 ---

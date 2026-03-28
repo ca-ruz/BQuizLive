@@ -1,5 +1,5 @@
-# ₿Quiz Live — Website Style Guide
-> Reference for `docs/index.html` — what's what, what color is what, and how to change it.
+# ₿Quiz Live — Style Guide
+> Two sections: **Website** (`docs/index.html` + `docs/styles.css` + `docs/script.js`) and **Quiz App** (`public/styles.css`, `public/index.html`, `public/host.html`).
 
 ---
 
