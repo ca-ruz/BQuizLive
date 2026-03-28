@@ -9,12 +9,15 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:      #0f0f1a;
-      --card:    #1a1a2e;
-      --border:  #2a2a4a;
-      --accent:  #f7931a;
-      --text:    #f0f0f0;
-      --muted:   #8899aa;
+      --bg:      #080b08;
+      --card:    #0e1510;
+      --border:  #1a2e1c;
+      --accent:  #39ff14;   /* electric green  */
+      --orange:  #ff7700;   /* neon orange     */
+      --blue:    #4cc9f0;   /* electric blue   */
+      --purple:  #b044ff;   /* neon purple     */
+      --text:    #dff5df;
+      --muted:   #8866cc;
     }
 
     html { scroll-behavior: smooth; }
@@ -22,6 +25,10 @@
     body {
       font-family: "Segoe UI", system-ui, sans-serif;
       background: var(--bg);
+      background-image:
+        linear-gradient(rgba(57,255,20,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(57,255,20,.025) 1px, transparent 1px);
+      background-size: 40px 40px;
       color: var(--text);
       line-height: 1.6;
     }
@@ -32,17 +39,23 @@
     /* ── Nav ── */
     nav {
       position: sticky; top: 0; z-index: 10;
-      background: rgba(15,15,26,.92);
+      background: rgba(8,11,8,.92);
       backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--border);
       padding: 14px 24px;
       display: flex; align-items: center; justify-content: space-between;
       gap: 16px;
     }
-    .nav-logo { font-size: 1.3rem; font-weight: 900; color: var(--accent); letter-spacing: -0.5px; }
+    .nav-logo {
+      font-size: 1.3rem; font-weight: 900; color: var(--accent); letter-spacing: -0.5px;
+      text-shadow: 0 0 16px rgba(57,255,20,.7), 0 0 32px rgba(57,255,20,.35);
+      text-decoration: none;
+    }
     .nav-logo span { color: var(--text); }
+    .nav-logo .live { color: var(--accent); text-shadow: 0 0 14px rgba(57,255,20,.5); }
+    .hero h1 .bitcoin { color: var(--orange); text-shadow: 0 0 30px rgba(255,119,0,.6), 0 0 60px rgba(255,119,0,.25); }
     .nav-links { display: flex; gap: 20px; font-size: .9rem; }
-    .nav-links a { color: var(--muted); }
+    .nav-links a { color: var(--purple); }
     .nav-links a:hover { color: var(--text); text-decoration: none; }
 
     /* ── Hero ── */
@@ -54,9 +67,9 @@
     }
     .hero-badge {
       display: inline-block;
-      background: rgba(247,147,26,.12);
-      border: 1px solid rgba(247,147,26,.35);
-      color: var(--accent);
+      background: rgba(176,68,255,.1);
+      border: 1px solid rgba(176,68,255,.4);
+      color: var(--purple);
       border-radius: 99px;
       padding: 5px 16px;
       font-size: .82rem;
@@ -64,6 +77,7 @@
       letter-spacing: .5px;
       text-transform: uppercase;
       margin-bottom: 22px;
+      box-shadow: 0 0 16px rgba(176,68,255,.2);
     }
     .hero h1 {
       font-size: clamp(2rem, 6vw, 3.4rem);
@@ -72,7 +86,10 @@
       margin-bottom: 18px;
       letter-spacing: -1px;
     }
-    .hero h1 span { color: var(--accent); }
+    .hero h1 span {
+      color: var(--accent);
+      text-shadow: 0 0 30px rgba(57,255,20,.6), 0 0 60px rgba(57,255,20,.25);
+    }
     .hero p {
       font-size: 1.12rem;
       color: var(--muted);
@@ -90,10 +107,19 @@
       text-decoration: none;
     }
     .btn:hover { transform: translateY(-2px); text-decoration: none; }
-    .btn-primary { background: var(--accent); color: #000; }
-    .btn-primary:hover { box-shadow: 0 0 0 3px rgba(247,147,26,.35); }
-    .btn-outline { background: transparent; color: var(--text); border: 2px solid var(--border); }
-    .btn-outline:hover { border-color: var(--accent); }
+    .btn-primary { background: var(--accent); color: #030801; }
+    .btn-primary:hover { box-shadow: 0 0 0 3px rgba(57,255,20,.4), 0 0 24px rgba(57,255,20,.35); }
+    .btn-outline {
+      background: rgba(176,68,255,.1);
+      color: var(--purple);
+      border: 1px solid rgba(176,68,255,.45);
+      box-shadow: 0 0 14px rgba(176,68,255,.2);
+    }
+    .btn-outline:hover {
+      background: rgba(176,68,255,.2);
+      border-color: rgba(176,68,255,.75);
+      box-shadow: 0 0 22px rgba(176,68,255,.35);
+    }
 
     /* ── Demo screenshot placeholder ── */
     .demo-wrap {
@@ -109,16 +135,23 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 14px;
+      box-shadow: 0 0 40px rgba(57,255,20,.06), inset 0 1px 0 rgba(255,255,255,.03);
     }
     .demo-card {
       background: var(--bg);
-      border: 1px solid var(--border);
+      border: 1px solid rgba(57,255,20,.25);
       border-radius: 12px;
       padding: 18px 16px;
       text-align: center;
+      transition: border-color .2s, box-shadow .2s;
+      box-shadow: 0 0 18px rgba(57,255,20,.1);
+    }
+    .demo-card:hover {
+      border-color: rgba(57,255,20,.55);
+      box-shadow: 0 0 28px rgba(57,255,20,.22);
     }
     .demo-card .icon { font-size: 2rem; margin-bottom: 8px; }
-    .demo-card p { font-size: .88rem; color: var(--muted); }
+    .demo-card p { font-size: .88rem; color: rgba(57,255,20,.7); }
     .demo-card strong { display: block; font-size: .95rem; color: var(--text); margin-bottom: 4px; }
 
     /* ── Section ── */
@@ -127,6 +160,7 @@
     .section-label {
       font-size: .78rem; font-weight: 700; letter-spacing: 1px;
       text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+      text-shadow: 0 0 10px rgba(57,255,20,.5);
     }
     h2 { font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 800; margin-bottom: 14px; letter-spacing: -.5px; }
     .subtitle { color: var(--muted); font-size: 1rem; margin-bottom: 36px; max-width: 560px; }
@@ -135,13 +169,23 @@
     .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
     .feature {
       background: var(--card);
-      border: 1px solid var(--border);
+      border: 1px solid rgba(76,201,240,.25);
       border-radius: 14px;
       padding: 22px 20px;
+      transition: border-color .2s, box-shadow .2s;
+      box-shadow: 0 0 22px rgba(76,201,240,.1);
     }
-    .feature .icon { font-size: 1.6rem; margin-bottom: 10px; }
-    .feature h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
-    .feature p { font-size: .88rem; color: var(--muted); line-height: 1.5; }
+    .feature:hover {
+      border-color: rgba(76,201,240,.55);
+      box-shadow: 0 0 32px rgba(76,201,240,.22);
+    }
+    .feature:active {
+      border-color: rgba(76,201,240,.85);
+      box-shadow: 0 0 42px rgba(76,201,240,.4);
+    }
+    .feature .icon { font-size: 1.6rem; margin-bottom: 10px; filter: drop-shadow(0 0 6px rgba(176,68,255,.6)); }
+    .feature h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; color: var(--purple); }
+    .feature p { font-size: .88rem; color: rgba(76,201,240,.8); line-height: 1.5; }
 
     /* ── Install steps ── */
     .steps { display: flex; flex-direction: column; gap: 20px; }
@@ -149,25 +193,54 @@
     .step-num {
       flex-shrink: 0;
       width: 32px; height: 32px;
-      background: var(--accent);
-      color: #000;
+      background: var(--orange);
+      color: #1a0800;
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-weight: 900; font-size: .9rem;
+      box-shadow: 0 0 14px rgba(255,119,0,.55);
     }
     .step-body h3 { font-size: .95rem; font-weight: 700; margin-bottom: 4px; }
     .step-body p { font-size: .88rem; color: var(--muted); }
 
     pre, code {
       font-family: "Courier New", monospace;
-      background: #0a0a14;
-      border: 1px solid var(--border);
+      background: #050805;
+      border: 1px solid rgba(76,201,240,.25);
       border-radius: 10px;
-      color: #88ccff;
+      color: rgba(76,201,240,.55);
       font-size: .88rem;
+      box-shadow: 0 0 16px rgba(76,201,240,.08);
+      transition: border-color .25s, box-shadow .25s, color .25s;
     }
-    pre { padding: 18px 20px; overflow-x: auto; margin-top: 10px; line-height: 1.7; }
-    code { padding: 2px 8px; border-radius: 5px; }
+    pre {
+      padding: 18px 20px; overflow-x: auto; margin-top: 10px; line-height: 1.7;
+      cursor: pointer;
+    }
+    pre:hover {
+      border-color: rgba(76,201,240,.6);
+      box-shadow: 0 0 26px rgba(76,201,240,.25);
+      color: var(--blue);
+    }
+    pre.copied {
+      border-color: rgba(57,255,20,.65);
+      box-shadow: 0 0 30px rgba(57,255,20,.3);
+      color: var(--accent);
+    }
+    code {
+      padding: 2px 8px; border-radius: 5px;
+      cursor: pointer;
+    }
+    code:hover {
+      border-color: rgba(76,201,240,.6);
+      box-shadow: 0 0 10px rgba(76,201,240,.25);
+      color: var(--blue);
+    }
+    code.copied {
+      border-color: rgba(57,255,20,.65);
+      box-shadow: 0 0 12px rgba(57,255,20,.3);
+      color: var(--accent);
+    }
 
     /* ── Lightning section ── */
     .lightning-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
@@ -177,17 +250,27 @@
       border-radius: 14px;
       padding: 22px 20px;
     }
-    .ln-card.recommended { border-color: var(--accent); }
+    .ln-card { transition: border-color .2s, box-shadow .2s; cursor: pointer; }
+    .ln-card.recommended { border-color: var(--border); }
+    .ln-card:hover {
+      border-color: var(--orange);
+      box-shadow: 0 0 24px rgba(255,119,0,.25);
+    }
+    .ln-card:active {
+      border-color: rgba(255,119,0,.9);
+      box-shadow: 0 0 40px rgba(255,119,0,.4);
+    }
     .ln-badge {
       display: inline-block;
-      background: var(--accent); color: #000;
+      background: var(--orange); color: #1a0800;
       border-radius: 99px; padding: 2px 12px;
       font-size: .75rem; font-weight: 700;
       margin-bottom: 10px;
+      box-shadow: 0 0 12px rgba(255,119,0,.5);
     }
-    .ln-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
-    .ln-card p { font-size: .85rem; color: var(--muted); line-height: 1.5; }
-    .ln-card ul { margin-top: 8px; padding-left: 18px; font-size: .85rem; color: var(--muted); }
+    .ln-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; color: var(--accent); }
+    .ln-card p { font-size: .85rem; color: var(--text); line-height: 1.5; }
+    .ln-card ul { margin-top: 8px; padding-left: 18px; font-size: .85rem; color: var(--text); }
     .ln-card ul li { margin-bottom: 3px; }
 
     /* ── Footer ── */
@@ -198,9 +281,72 @@
       color: var(--muted);
       font-size: .88rem;
     }
+    .footer-logo { color: var(--accent); font-weight: 900; text-shadow: 0 0 14px rgba(57,255,20,.5); }
     footer a { color: var(--muted); }
-    footer a:hover { color: var(--accent); }
+    footer a:hover { color: var(--accent); text-shadow: 0 0 10px rgba(57,255,20,.5); }
     .footer-inner { max-width: 860px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; }
+
+    .pre-wrap { margin-top: 10px; }
+    .pre-wrap pre { margin-top: 0; }
+
+    /* ── Card zoom modal ── */
+    .demo-card, .feature { cursor: pointer; }
+    .card-modal-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(8,11,8,.88);
+      backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      animation: modalFadeIn .2s ease both;
+    }
+    .card-modal-box {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 20px;
+      padding: 44px 40px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      animation: cardZoomIn .28s cubic-bezier(.17,.89,.32,1.28) both;
+      cursor: default;
+    }
+    .card-modal-box .modal-icon  { font-size: 4rem; margin-bottom: 18px; }
+    .card-modal-box .modal-badge {
+      display: inline-block;
+      background: var(--orange); color: #1a0800;
+      border-radius: 99px; padding: 2px 14px;
+      font-size: .8rem; font-weight: 700; margin-bottom: 14px;
+    }
+    .card-modal-box .modal-title { font-size: 1.5rem; font-weight: 800; color: var(--text); margin-bottom: 14px; }
+    .card-modal-box .modal-desc  { font-size: 1rem; color: var(--muted); line-height: 1.7; }
+    .card-modal-box .modal-list  {
+      text-align: left; padding-left: 20px; margin: 14px 0 0;
+      color: var(--muted); font-size: .95rem; line-height: 1.9;
+    }
+    .card-modal-box .modal-code  {
+      background: #050805;
+      border: 1px solid rgba(76,201,240,.25);
+      border-radius: 8px; padding: 12px 16px;
+      font-family: "Courier New", monospace;
+      font-size: .88rem; color: rgba(76,201,240,.55);
+      text-align: left; margin-top: 14px;
+      word-break: break-all; white-space: pre-wrap;
+      cursor: pointer;
+      transition: border-color .25s, box-shadow .25s, color .25s;
+    }
+    .card-modal-box .modal-code:hover {
+      border-color: rgba(76,201,240,.6);
+      box-shadow: 0 0 12px rgba(76,201,240,.25);
+      color: var(--blue);
+    }
+    .card-modal-box .modal-code.copied {
+      border-color: rgba(57,255,20,.65);
+      box-shadow: 0 0 14px rgba(57,255,20,.3);
+      color: var(--accent);
+    }
+    .card-modal-hint { font-size: .75rem; color: var(--border); margin-top: 24px; }
+    @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes cardZoomIn  { from { opacity: 0; transform: scale(.78); } to { opacity: 1; transform: scale(1); } }
 
     @media (max-width: 500px) {
       .nav-links { display: none; }
@@ -212,7 +358,7 @@
 
 <!-- ── Nav ─────────────────────────────────────────────────── -->
 <nav>
-  <span class="nav-logo">₿<span>Quiz</span> Live</span>
+  <a href="#" class="nav-logo">₿<span>Quiz</span> <span class="live">Live</span></a>
   <div class="nav-links">
     <a href="#features">Características</a>
     <a href="#install">Instalación</a>
@@ -224,7 +370,7 @@
 <!-- ── Hero ─────────────────────────────────────────────────── -->
 <section class="hero">
   <div class="hero-badge">⚡ Open Source · GPL v3</div>
-  <h1>Quiz de <span>Bitcoin</span><br/>para tu meetup</h1>
+  <h1>Quiz de <span class="bitcoin">Bitcoin</span><br/>para tu meetup</h1>
   <p>
     Multijugador en tiempo real estilo Kahoot. Los participantes se unen desde su celular,
     responden preguntas sobre Bitcoin y el ganador recibe sats por Lightning Network.
@@ -273,22 +419,22 @@
 
   <div class="features">
     <div class="feature">
-      <div class="icon">❓</div>
+      <div class="icon">🟠</div>
       <h3>25 preguntas de Bitcoin</h3>
       <p>Cubren blockchain, minería, Lightning Network, claves privadas, autocustodia y más — diseñadas para principiantes.</p>
     </div>
     <div class="feature">
-      <div class="icon">🏎️</div>
+      <div class="icon">⚡</div>
       <h3>Puntuación por velocidad</h3>
       <p>Respuesta correcta al instante = 100 pts. Al último segundo = 50 pts. Respuesta incorrecta = 0. La rapidez importa.</p>
     </div>
     <div class="feature">
-      <div class="icon">🔄</div>
+      <div class="icon">⚙️</div>
       <h3>Flujo automático</h3>
       <p>La pregunta termina cuando alguien acierta o todos respondieron. El siguiente turno inicia solo.</p>
     </div>
     <div class="feature">
-      <div class="icon">📊</div>
+      <div class="icon">📡</div>
       <h3>Estadísticas en vivo</h3>
       <p>El presentador ve qué opción eligió cada jugador en tiempo real, con barras de porcentaje por respuesta.</p>
     </div>
@@ -298,17 +444,17 @@
       <p>Clasificación actualizada después de cada pregunta. Los participantes ven su posición y puntaje al instante.</p>
     </div>
     <div class="feature">
-      <div class="icon">⚡</div>
+      <div class="icon">💸</div>
       <h3>Pago Lightning</h3>
       <p>Conecta tu wallet vía NWC o tu nodo LND. El ganador recibe sats directamente.</p>
     </div>
     <div class="feature">
-      <div class="icon">📱</div>
+      <div class="icon">📲</div>
       <h3>Mobile-first</h3>
       <p>Botones grandes, tipografía legible, optimizado para pantallas pequeñas. Funciona en cualquier navegador.</p>
     </div>
     <div class="feature">
-      <div class="icon">🔓</div>
+      <div class="icon">🌐</div>
       <h3>100% Open Source</h3>
       <p>GPL v3. Sin tracking, sin telemetría, sin servicios externos obligatorios. Tuyo para siempre.</p>
     </div>
@@ -326,30 +472,30 @@
       <div class="step-num">1</div>
       <div class="step-body">
         <h3>Clona el repositorio</h3>
-        <pre>git clone https://github.com/ca-ruz/bitcoin-quiz-live
-cd bitcoin-quiz-live</pre>
+        <div class="pre-wrap"><pre>git clone https://github.com/ca-ruz/bitcoin-quiz-live
+cd bitcoin-quiz-live</pre></div>
       </div>
     </div>
     <div class="step">
       <div class="step-num">2</div>
       <div class="step-body">
         <h3>Instala las dependencias</h3>
-        <pre>npm install</pre>
+        <div class="pre-wrap"><pre>npm install</pre></div>
       </div>
     </div>
     <div class="step">
       <div class="step-num">3</div>
       <div class="step-body">
         <h3>Configura el entorno</h3>
-        <pre>cp .env.example .env
-# edita .env si quieres conectar Lightning</pre>
+        <div class="pre-wrap"><pre>cp .env.example .env
+# edita .env si quieres conectar Lightning</pre></div>
       </div>
     </div>
     <div class="step">
       <div class="step-num">4</div>
       <div class="step-body">
         <h3>Inicia el servidor</h3>
-        <pre>npm start</pre>
+        <div class="pre-wrap"><pre>npm start</pre></div>
         <p>Presentador: <code>http://localhost:3000/host.html</code> · Jugadores: <code>http://&lt;tu-IP-local&gt;:3000</code></p>
       </div>
     </div>
@@ -373,7 +519,7 @@ cd bitcoin-quiz-live</pre>
         <li>Bitkit</li>
         <li>Cualquier wallet con soporte NWC</li>
       </ul>
-      <pre style="margin-top:12px">NWC_URL=nostr+walletconnect://...</pre>
+      <div class="pre-wrap"><pre>NWC_URL=nostr+walletconnect://...</pre></div>
     </div>
     <div class="ln-card">
       <h3>🔧 LND REST API</h3>
@@ -383,8 +529,8 @@ cd bitcoin-quiz-live</pre>
         <li>LND_MACAROON (hex)</li>
         <li>LND_CERT (base64, opcional)</li>
       </ul>
-      <pre style="margin-top:12px">LND_REST_URL=https://tu-nodo:8080
-LND_MACAROON=abc123...</pre>
+      <div class="pre-wrap"><pre>LND_REST_URL=https://tu-nodo:8080
+LND_MACAROON=abc123...</pre></div>
     </div>
   </div>
 </section>
@@ -392,13 +538,70 @@ LND_MACAROON=abc123...</pre>
 <!-- ── Footer ────────────────────────────────────────────────── -->
 <footer>
   <div class="footer-inner">
-    <span>₿Quiz Live</span>
-    <span>
-      <a href="https://github.com/ca-ruz/bitcoin-quiz-live/blob/main/LICENSE">GPL v3</a>
-      · Hecho para la comunidad Bitcoin de México 🇲🇽
-    </span>
+    <span class="footer-logo">₿Quiz Live</span>
+    <span>GPL v3 · Bitcoin México 🇲🇽</span>
   </div>
 </footer>
 
+<script>
+  // Card zoom modal
+  function openCardModal(card) {
+    const isLn      = card.classList.contains('ln-card');
+    const isFeature = card.classList.contains('feature');
+    const glowRgb   = isLn ? '255,119,0' : isFeature ? '76,201,240' : '57,255,20';
+    const textColor  = isFeature ? 'rgba(76,201,240,.85)' : isLn ? 'var(--text)' : 'rgba(57,255,20,.7)';
+    const titleColor = isFeature ? 'var(--purple)' : isLn ? 'var(--accent)' : 'var(--text)';
+
+    const icon  = card.querySelector('.icon')?.innerText || '';
+    const badge = card.querySelector('.ln-badge')?.innerText || '';
+    const title = card.querySelector('strong, h3')?.innerText || '';
+    const desc  = card.querySelector('p')?.innerText || '';
+    const items = [...card.querySelectorAll('ul li')].map(li => `<li>${li.innerText}</li>`).join('');
+    const code  = card.querySelector('pre')?.innerText || '';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'card-modal-overlay';
+    overlay.innerHTML = `
+      <div class="card-modal-box" style="border-color:rgba(${glowRgb},.45);box-shadow:0 0 60px rgba(${glowRgb},.18),0 0 120px rgba(${glowRgb},.07);${isLn ? '' : ''}">
+        ${icon  ? `<div class="modal-icon">${icon}</div>` : ''}
+        ${badge ? `<div class="modal-badge">${badge}</div>` : ''}
+        ${title ? `<div class="modal-title" style="color:${titleColor}">${title}</div>` : ''}
+        ${desc  ? `<div class="modal-desc" style="color:${textColor}">${desc}</div>` : ''}
+        ${items ? `<ul class="modal-list" style="color:${textColor}">${items}</ul>` : ''}
+        ${code  ? `<div class="modal-code">${code}</div>` : ''}
+        <div class="card-modal-hint">clic en cualquier lugar para cerrar · esc</div>
+      </div>`;
+
+    function close() { overlay.remove(); document.removeEventListener('keydown', onKey); }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(overlay);
+
+    overlay.querySelectorAll('.modal-code').forEach(el => {
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(el.innerText).then(() => {
+          el.classList.add('copied');
+          setTimeout(() => el.classList.remove('copied'), 1000);
+        });
+      });
+    });
+  }
+
+  document.querySelectorAll('.demo-card, .feature, .ln-card').forEach(card => {
+    card.addEventListener('click', () => openCardModal(card));
+  });
+
+  document.querySelectorAll('pre, code').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      navigator.clipboard.writeText(el.innerText).then(() => {
+        el.classList.add('copied');
+        setTimeout(() => el.classList.remove('copied'), 1000);
+      });
+    });
+  });
+</script>
 </body>
 </html>
