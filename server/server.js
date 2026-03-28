@@ -368,7 +368,8 @@ function launchQuestion(roomCode) {
     hostSocket.emit("question_started", {
       ...playerPayload,
       correct: question.correct,
-      explanation: question.explanation
+      explanation: question.explanation,
+      totalPlayers: room.players.size
     });
   }
 

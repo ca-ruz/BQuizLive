@@ -92,34 +92,30 @@
 
 <!-- ════════════════════════════════════════════════════════ PREGUNTA ══ -->
 <div class="screen" id="screen-question">
-  <div class="question-host-grid">
-    <div>
-      <div class="card" style="margin-bottom:14px">
-        <p class="question-counter" id="host-q-counter">Pregunta 1 de 25</p>
+  <div class="host-container">
+    <div class="card" style="margin-bottom:14px">
+      <p class="question-counter" id="host-q-counter">Pregunta 1 de 25</p>
 
-        <div class="timer-wrap" style="margin-bottom:10px">
-          <div class="timer-track" style="flex:1">
-            <div class="timer-bar" id="host-timer-bar" style="width:100%"></div>
-          </div>
-          <span class="timer-number" id="host-timer-num">15</span>
+      <div class="timer-wrap" style="margin-bottom:10px">
+        <div class="timer-track" style="flex:1">
+          <div class="timer-bar" id="host-timer-bar" style="width:100%"></div>
         </div>
-
-        <div class="question-text" id="host-q-text" style="font-size:1.1rem;margin-bottom:12px"></div>
-
-        <p id="host-correct-hint" class="text-muted" style="font-size:.9rem;margin-bottom:10px"></p>
-
-        <p class="answered-count" id="host-answered-count">0 / 0 respondieron</p>
-        <button class="btn btn-secondary btn-sm" id="btn-force-end" style="margin-top:10px;width:100%">
-          Terminar Pregunta Ahora
-        </button>
+        <span class="timer-number" id="host-timer-num">15</span>
       </div>
+
+      <div class="question-text" id="host-q-text" style="font-size:1.1rem;margin-bottom:12px"></div>
+
+      <p id="host-correct-hint" class="text-muted" style="font-size:.9rem;margin-bottom:10px"></p>
+
+      <p class="answered-count" id="host-answered-count">0 / 0 respondieron</p>
+      <button class="btn btn-secondary btn-sm" id="btn-force-end" style="margin-top:10px;width:100%">
+        Terminar Pregunta Ahora
+      </button>
     </div>
 
-    <div>
-      <div class="card">
-        <p class="section-title">Respuestas en vivo</p>
-        <ul class="stats-list" id="host-stats-list"></ul>
-      </div>
+    <div class="card">
+      <p class="section-title">Marcador actual</p>
+      <div class="leaderboard" id="host-live-leaderboard"></div>
     </div>
   </div>
 </div>
@@ -135,10 +131,7 @@
         <span id="res-correct-text"></span>
       </div>
 
-      <p class="explanation" id="res-explanation" style="margin:0 0 14px"></p>
-
-      <p class="section-title">Distribución de respuestas</p>
-      <ul class="stats-list" id="res-stats-list"></ul>
+      <p class="explanation" id="res-explanation" style="margin:0"></p>
     </div>
 
     <div class="card" style="margin-bottom:14px">
@@ -155,7 +148,7 @@
         <div class="timer-bar" id="advance-bar" style="width:100%"></div>
       </div>
     </div>
-    <button class="btn btn-danger" id="btn-end-quiz-early" style="width:100%">Terminar Quiz</button>
+    <button class="btn" id="btn-end-quiz-early" style="max-width:320px;display:block;margin:0 auto;background:var(--accent2);color:#fff;box-shadow:0 0 18px rgba(255,119,0,.5),0 4px 20px rgba(255,119,0,.3)">Terminar Quiz</button>
   </div>
 </div>
 
@@ -165,7 +158,7 @@
     <p class="logo" style="font-size:2rem;margin-bottom:12px">₿<span>Quiz</span></p>
 
     <div class="winner-card" style="margin-bottom:16px">
-      <p style="font-size:2rem;margin-bottom:6px">🏆</p>
+      <p style="font-size:2rem;margin-bottom:6px">🎉</p>
       <p class="winner-name" id="final-winner-name"></p>
       <p class="winner-sats" id="final-winner-sats"></p>
 
@@ -190,12 +183,12 @@
       </div>
     </div>
 
-    <div class="card" style="margin-bottom:14px">
+    <div class="card" style="margin-bottom:14px;max-width:480px;margin-left:auto;margin-right:auto">
       <p class="section-title">Clasificación Final</p>
       <div class="leaderboard" id="final-leaderboard"></div>
     </div>
 
-    <button class="btn btn-secondary" id="btn-restart">Nuevo Quiz</button>
+    <button class="btn btn-secondary" id="btn-restart" style="max-width:480px;margin:0 auto;display:block">Nuevo Quiz</button>
   </div>
 </div>
 
@@ -208,6 +201,7 @@
   const socket = io();
   let cancelTimer = null;
   let currentOptions = [];
+  let lastLeaderboard = [];
 
   // Obtener info del servidor al cargar
   fetch("/api/info")
@@ -241,9 +235,7 @@
 
   // ── Pantalla de resultados ────────────────────────────────────────────
   document.getElementById("btn-end-quiz-early").addEventListener("click", () => {
-    if (confirm("¿Terminar el quiz ahora y mostrar los resultados finales?")) {
-      socket.emit("end_quiz");
-    }
+    socket.emit("end_quiz");
   });
 
   // ── Pantalla final ────────────────────────────────────────────────────
@@ -297,19 +289,15 @@
     document.getElementById("btn-start-quiz").disabled = false;
   });
 
-  socket.on("question_started", ({ index, total, text, options, correct, explanation, timeLimit }) => {
+  socket.on("question_started", ({ index, total, text, options, correct, explanation, timeLimit, totalPlayers }) => {
     currentOptions = options;
 
     document.getElementById("host-q-counter").textContent = `Pregunta ${index + 1} de ${total}`;
     document.getElementById("host-q-text").textContent = text;
     document.getElementById("host-correct-hint").innerHTML =
       `Correcta: <strong style="color:#4cdc5b">${esc(options[correct])}</strong>`;
-    document.getElementById("host-answered-count").textContent = "0 / ? respondieron";
-
-    renderStatsInto("host-stats-list",
-      options.map((opt, i) => ({ index: i, label: opt, count: 0, percentage: 0 })),
-      correct
-    );
+    document.getElementById("host-answered-count").textContent = `0 / ${totalPlayers} respondieron`;
+    document.getElementById("host-live-leaderboard").innerHTML = buildLeaderboard(lastLeaderboard);
 
     showScreen("screen-question");
 
@@ -317,13 +305,9 @@
     cancelTimer = startCountdown(timeLimit, () => {}, "host-timer-bar", "host-timer-num");
   });
 
-  socket.on("answer_stats", ({ stats, answeredCount, totalPlayers }) => {
+  socket.on("answer_stats", ({ answeredCount, totalPlayers }) => {
     document.getElementById("host-answered-count").textContent =
       `${answeredCount} / ${totalPlayers} respondieron`;
-    renderStatsInto("host-stats-list",
-      stats.map((s, i) => ({ ...s, label: currentOptions[i] || `Opción ${i + 1}` })),
-      -1
-    );
   });
 
   socket.on("question_ended", ({ correct, explanation, stats, leaderboard, questionIndex, isLastQuestion }) => {
@@ -333,10 +317,7 @@
     document.getElementById("res-correct-text").textContent = " " + (currentOptions[correct] || "");
     document.getElementById("res-explanation").textContent = explanation || "";
 
-    renderStatsInto("res-stats-list",
-      stats.map((s, i) => ({ ...s, label: currentOptions[i] || `Opción ${i + 1}` })),
-      correct
-    );
+    lastLeaderboard = leaderboard;
     document.getElementById("res-leaderboard").innerHTML = buildLeaderboard(leaderboard);
 
     // Hide end button on last question (quiz ends automatically)
@@ -386,21 +367,7 @@
     showScreen("screen-final");
   });
 
-  // ── Renderizado de estadísticas ───────────────────────────────────────
 
-  function renderStatsInto(listId, statsArr, correctIndex) {
-    document.getElementById(listId).innerHTML = statsArr.map(s => `
-      <li class="stat-row">
-        <span class="stat-label">
-          ${esc(s.label.length > 22 ? s.label.slice(0, 22) + "…" : s.label)}
-          ${s.index === correctIndex ? '<span class="correct-pill">✓</span>' : ""}
-        </span>
-        <div class="stat-track">
-          <div class="stat-fill ans-${s.index}" style="width:${s.percentage}%"></div>
-        </div>
-        <span class="stat-pct">${s.percentage}%</span>
-      </li>`).join("");
-  }
 })();
 </script>
 </body>
