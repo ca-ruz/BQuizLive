@@ -172,3 +172,101 @@ All cards, buttons, and code blocks share the same hover philosophy:
 | Nav link color | `.nav-links a { color: … }` |
 | Section label color | `.section-label { color: … }` |
 | GitHub links | Both have `target="_blank" rel="noopener noreferrer"` |
+
+---
+
+---
+
+# ₿Quiz Live — Quiz App Style Guide
+> Reference for `public/styles.css`, `public/index.html`, `public/host.html`
+
+---
+
+## Color Palette
+
+| Name | Variable | Hex | Used For |
+|---|---|---|---|
+| Electric Green | `--accent` | `#39ff14` | Logo, timer bar, correct answer, scores, input focus |
+| Neon Orange | `--accent2` | `#ff7700` | Timer warning, Terminar Quiz button, player question card glow |
+| Background | `--bg` | `#080b08` | Page background |
+| Card | `--card` | `#0e1510` | Cards, question box |
+| Card Dark | `--card2` | `#050805` | Input fields, inner boxes, leaderboard rows |
+| Text | `--text` | `#dff5df` | Body text, headings |
+| Muted | `--muted` | `#8866cc` | Labels, hints, secondary text |
+| Border | `--border` | `#1a2e1c` | Card borders |
+| Correct | `--correct` | `#39ff14` | Correct answer highlight |
+| Incorrect | `--incorrect` | `#ff3300` | Wrong answer, danger button |
+
+---
+
+## Answer Buttons (`public/styles.css` + `public/index.html`)
+
+| Slot | Variable | Gradient | Glow Color | Text Color |
+|---|---|---|---|---|
+| 0 | `--ans-0` | `#ffff00 → #cc8800` (yellow) | `rgba(255,230,0)` | `#1a1000` (dark warm) |
+| 1 | `--ans-1` | `#00eeff → #0044dd` (cyan→blue) | `rgba(0,200,255)` | `#000d18` (dark cool) |
+| 2 | `--ans-2` | `#dd55ff → #5500bb` (purple) | `rgba(190,50,255)` | `#0e0018` (dark purple) |
+| 3 | `--ans-3` | `#39ff14 → #007700` (green) | `rgba(57,255,20)` | `#001800` (dark green) |
+
+> **Color order is randomized per question** — `index.html` shuffles `[0,1,2,3]` with Fisher-Yates so no answer position always has the same color.
+
+> **Dark text** is intentional — neon gradients pop more against dark/black text than white.
+
+Each button has:
+- A bright top border (`border-top`) for an edge-glow effect
+- `box-shadow`: tight glow + drop shadow
+- Hover: `translateY(-2px)` + `brightness(1.15)`
+
+---
+
+## Player Question Card
+
+The `.question-text` card on the **player screen only** has an orange glow defined inline in `index.html`:
+
+```css
+border: 1px solid rgba(255,119,0,.55);
+box-shadow: 0 0 28px rgba(255,119,0,.28), 0 0 60px rgba(255,100,0,.1), 0 4px 20px rgba(0,0,0,.4), inset 0 0 30px rgba(255,119,0,.07);
+```
+
+The host's question card has no colored glow (plain `.card` style).
+
+---
+
+## Host Screens
+
+| Screen | Key elements |
+|---|---|
+| Setup | Green primary button, orange lightning status |
+| Lobby | Room code in green dashed box, QR code, player chips |
+| Question | Timer bar (green→orange→red), question card, live leaderboard from previous question, answered count |
+| Results | Correct answer callout (green border), explanation, leaderboard, orange "Terminar Quiz" button (`max-width: 320px`) |
+| Final | Winner card (green border/gradient), leaderboard card (`max-width: 480px`), "Nuevo Quiz" button (`max-width: 480px`) |
+
+---
+
+## Player Screens
+
+| Screen | Key elements |
+|---|---|
+| Join | Logo, nickname + room code inputs |
+| Waiting | Only shown on initial join — not shown between questions |
+| Question | Orange-glowing question card, 4 randomized neon answer buttons |
+| Result | Correct ✅ / Incorrect ❌ / Timeout ⏰, points earned, leaderboard |
+| Final (winner) | 🎉 + "¡GANASTE!" with green↔orange pulsing glow |
+| Final (others) | ⚡ + position message + winner announcement |
+
+---
+
+## Quick Reference: How to Change Things
+
+| I want to change… | Find… |
+|---|---|
+| Answer button colors | `.answer-btn.ans-0/1/2/3` in `styles.css` |
+| Answer button text color | `color:` on each `.answer-btn.ans-X` rule |
+| Turn off color randomization | Remove `colorOrder` shuffle in `index.html` JS |
+| Player question card glow | `.question-text` override in `index.html` `<style>` |
+| Timer bar colors | `.timer-bar`, `.timer-bar.warning`, `.timer-bar.danger` |
+| Logo glow | `text-shadow` on `.logo` |
+| Correct answer color | `--correct` in `:root` |
+| Winner animation | `@keyframes glow` in `styles.css` |
+| Results delay | `RESULTS_DELAY` in `.env` (default 8, currently 7) |
