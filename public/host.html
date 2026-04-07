@@ -18,18 +18,20 @@
 </head>
 <body>
 
+<button class="btn-lang">EN</button>
+
 <!-- ════════════════════════════════════════════════════════ INICIO ══ -->
 <div class="screen active" id="screen-setup">
-  <p class="logo">₿<span>Quiz</span> <span style="font-size:1.2rem;font-weight:400;color:var(--muted)">Presentador</span></p>
-  <p class="tagline">Quiz de Bitcoin para tu meetup</p>
+  <p class="logo">₿<span>Quiz</span> <span style="font-size:1.2rem;font-weight:400;color:var(--muted)" data-i18n="host-role">Presentador</span></p>
+  <p class="tagline" data-i18n="host-tagline">Quiz de Bitcoin para tu meetup</p>
 
   <div class="card" style="max-width:420px;text-align:center">
     <p style="font-size:2.5rem;margin-bottom:8px">⚡</p>
-    <h2 style="margin-bottom:6px">¿Listo para presentar?</h2>
-    <p class="text-muted" style="font-size:.92rem;margin-bottom:20px">
+    <h2 style="margin-bottom:6px" data-i18n="ready-title">¿Listo para presentar?</h2>
+    <p class="text-muted" style="font-size:.92rem;margin-bottom:20px" data-i18n="ready-desc">
       Crea una sala, comparte el código con los participantes y conduce el quiz pregunta por pregunta.
     </p>
-    <button class="btn btn-primary" id="btn-create-room">Crear Sala</button>
+    <button class="btn btn-primary" id="btn-create-room" data-i18n="btn-create-room">Crear Sala</button>
     <p id="lightning-status" class="text-muted mt-sm" style="font-size:.85rem"></p>
   </div>
 </div>
@@ -40,26 +42,26 @@
     <p class="logo" style="font-size:1.8rem;margin-bottom:12px">₿<span>Quiz</span></p>
 
     <div class="card" style="text-align:center;margin-bottom:14px">
-      <p class="section-title">Código de Sala</p>
+      <p class="section-title" data-i18n="room-code-label">Código de Sala</p>
       <div class="room-code" id="lobby-room-code">----</div>
 
       <div class="qr-wrap" id="lobby-qr" style="margin:12px auto">
-        <img id="lobby-qr-img" src="" alt="Código QR" width="200" height="200" />
+        <img id="lobby-qr-img" src="" alt="QR" width="200" height="200" />
       </div>
 
       <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 16px;margin-top:4px">
-        <p style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">O entra desde tu navegador en</p>
+        <p style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px" data-i18n="join-from-browser">O entra desde tu navegador en</p>
         <p id="lobby-join-url" style="font-family:monospace;font-size:1rem;color:var(--accent);font-weight:700;word-break:break-all"></p>
       </div>
     </div>
 
     <div class="card">
-      <p class="section-title">Jugadores conectados: <span id="player-count" style="color:var(--accent)">0</span></p>
+      <p class="section-title"><span data-i18n="players-connected">Jugadores conectados:</span> <span id="player-count" style="color:var(--accent)">0</span></p>
       <div class="player-list" id="player-list">
-        <em class="text-muted" style="font-size:.88rem">Esperando participantes…</em>
+        <em class="text-muted" style="font-size:.88rem" data-i18n="waiting-players">Esperando participantes…</em>
       </div>
-      <button class="btn btn-primary" id="btn-start-quiz" disabled>Iniciar Quiz</button>
-      <p id="lobby-hint" class="text-center text-muted mt-sm" style="font-size:.85rem">Se necesita al menos 1 jugador</p>
+      <button class="btn btn-primary" id="btn-start-quiz" disabled data-i18n="btn-start-quiz">Iniciar Quiz</button>
+      <p id="lobby-hint" class="text-center text-muted mt-sm" style="font-size:.85rem"></p>
     </div>
 
   </div>
@@ -70,7 +72,7 @@
   <div class="host-container" style="max-width:580px">
 
     <div class="card" style="margin-bottom:14px">
-      <p class="question-counter" id="host-q-counter">Pregunta 1 de 25</p>
+      <p class="question-counter" id="host-q-counter"></p>
 
       <div class="timer-wrap" style="margin-bottom:10px">
         <div class="timer-track" style="flex:1">
@@ -81,14 +83,14 @@
 
       <div class="question-text" id="host-q-text" style="font-size:1.1rem;margin-bottom:12px"></div>
 
-      <p class="answered-count" id="host-answered-count">0 / 0 respondieron</p>
-      <button class="btn btn-secondary btn-sm" id="btn-force-end" style="margin-top:10px;width:100%">
+      <p class="answered-count" id="host-answered-count"></p>
+      <button class="btn btn-secondary btn-sm" id="btn-force-end" style="margin-top:10px;width:100%" data-i18n="force-end">
         Terminar Pregunta Ahora
       </button>
     </div>
 
     <div class="card">
-      <p class="section-title">Marcador actual</p>
+      <p class="section-title" data-i18n="current-leaderboard">Marcador actual</p>
       <div class="leaderboard" id="host-live-leaderboard"></div>
     </div>
 
@@ -100,10 +102,10 @@
   <div class="host-container" style="max-width:580px">
 
     <div class="card" style="margin-bottom:14px;text-align:center">
-      <p class="question-counter" style="margin-bottom:8px">Pregunta <span id="res-q-label"></span></p>
+      <p class="question-counter" style="margin-bottom:8px"><span data-i18n="question-label">Pregunta</span> <span id="res-q-label"></span></p>
       <p id="res-q-text" style="font-size:1.15rem;font-weight:700;line-height:1.4;margin-bottom:18px;color:var(--text)"></p>
       <div style="padding:16px 20px;background:rgba(57,255,20,.07);border:1px solid rgba(57,255,20,.4);border-radius:12px;box-shadow:0 0 24px rgba(57,255,20,.12)">
-        <p style="font-size:.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px">✓ Respuesta correcta</p>
+        <p style="font-size:.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px" data-i18n="correct-answer">✓ Respuesta correcta</p>
         <p id="res-correct-text" style="font-size:1.5rem;font-weight:900;color:var(--correct);text-shadow:0 0 18px rgba(57,255,20,.5)"></p>
       </div>
     </div>
@@ -111,19 +113,20 @@
     <div class="explanation" id="res-explanation" style="max-width:100%;margin-bottom:14px"></div>
 
     <div class="card" style="margin-bottom:14px">
-      <p class="section-title">Marcador</p>
+      <p class="section-title" data-i18n="leaderboard">Marcador</p>
       <div class="leaderboard" id="res-leaderboard"></div>
     </div>
 
     <div style="text-align:center;margin-bottom:8px">
       <p style="font-size:1rem;color:var(--muted);margin-bottom:8px">
-        Siguiente pregunta en <strong style="color:var(--accent)" id="advance-countdown">7</strong>s…
+        <span data-i18n="next-in">Siguiente pregunta en</span>
+        <strong style="color:var(--accent)" id="advance-countdown">7</strong>s…
       </p>
       <div class="timer-track" style="max-width:260px;margin:0 auto">
         <div class="timer-bar" id="advance-bar" style="width:100%"></div>
       </div>
     </div>
-    <button class="btn" id="btn-end-quiz-early" style="width:100%;background:var(--accent2);color:#fff;box-shadow:0 0 18px rgba(255,119,0,.5),0 4px 20px rgba(255,119,0,.3)">Terminar Quiz</button>
+    <button class="btn" id="btn-end-quiz-early" style="width:100%;background:var(--accent2);color:#fff;box-shadow:0 0 18px rgba(255,119,0,.5),0 4px 20px rgba(255,119,0,.3)" data-i18n="btn-end-quiz">Terminar Quiz</button>
 
   </div>
 </div>
@@ -139,18 +142,18 @@
       <p class="winner-sats" id="final-winner-sats"></p>
 
       <div id="lightning-invoice-section" style="display:none">
-        <p class="section-title" style="margin-bottom:8px">Factura Lightning</p>
+        <p class="section-title" style="margin-bottom:8px" data-i18n="lightning-invoice">Factura Lightning</p>
         <div class="qr-wrap" id="invoice-qr-wrap" style="display:none;margin:0 auto 10px">
-          <img id="invoice-qr-img" src="" alt="QR Factura" width="220" height="220" />
+          <img id="invoice-qr-img" src="" alt="QR" width="220" height="220" />
         </div>
         <div class="invoice-box" id="invoice-text"></div>
-        <button class="btn btn-secondary btn-sm" id="btn-copy-invoice" style="margin-top:8px">
+        <button class="btn btn-secondary btn-sm" id="btn-copy-invoice" style="margin-top:8px" data-i18n="copy-invoice">
           Copiar Factura
         </button>
       </div>
 
       <div id="manual-payout-section" style="display:none">
-        <p style="color:var(--muted);font-size:.9rem;margin-bottom:6px">
+        <p style="color:var(--muted);font-size:.9rem;margin-bottom:6px" data-i18n="manual-payment-label">
           Lightning no configurado — paga manualmente:
         </p>
         <p style="font-size:1.3rem;font-weight:900;color:var(--accent)" id="manual-sats"></p>
@@ -158,19 +161,22 @@
     </div>
 
     <div class="card" style="margin-bottom:14px;max-width:540px;margin-left:auto;margin-right:auto">
-      <p class="section-title">Clasificación Final</p>
+      <p class="section-title" data-i18n="final-standings">Clasificación Final</p>
       <div class="leaderboard" id="final-leaderboard"></div>
     </div>
 
-    <button class="btn btn-secondary" id="btn-restart" style="max-width:540px;margin:0 auto;display:block">Nuevo Quiz</button>
+    <button class="btn btn-secondary" id="btn-restart" style="max-width:540px;margin:0 auto;display:block" data-i18n="btn-restart">Nuevo Quiz</button>
   </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
+<script src="i18n.js"></script>
 <script src="client.js"></script>
 <script>
 (function () {
   "use strict";
+
+  initLang();
 
   const socket = io();
   let cancelTimer = null;
@@ -178,42 +184,31 @@
   let currentQuestion = "";
   let lastLeaderboard = [];
 
-  // Obtener info del servidor al cargar
   fetch("/api/info")
     .then(r => r.json())
     .then(info => {
-      const labels = {
-        nwc:    "⚡ NWC conectado — ¡el ganador recibe sats reales!",
-        lnd:    "⚡ LND conectado — ¡el ganador recibe sats reales!",
-        manual: "Lightning no configurado — modo de pago manual"
-      };
-      document.getElementById("lightning-status").textContent =
-        labels[info.lightningMethod] || labels.manual;
+      const key = { nwc: 'lightning-nwc', lnd: 'lightning-lnd', manual: 'lightning-manual' }[info.lightningMethod] || 'lightning-manual';
+      document.getElementById("lightning-status").textContent = t(key);
     })
     .catch(() => {});
 
-  // ── Pantalla de inicio ────────────────────────────────────────────────
   document.getElementById("btn-create-room").addEventListener("click", () => {
     socket.emit("create_room");
   });
 
-  // ── Sala de espera ────────────────────────────────────────────────────
   document.getElementById("btn-start-quiz").addEventListener("click", () => {
     socket.emit("start_quiz");
     document.getElementById("btn-start-quiz").disabled = true;
   });
 
-  // ── Pantalla de pregunta ──────────────────────────────────────────────
   document.getElementById("btn-force-end").addEventListener("click", () => {
     socket.emit("force_end_question");
   });
 
-  // ── Pantalla de resultados ────────────────────────────────────────────
   document.getElementById("btn-end-quiz-early").addEventListener("click", () => {
     socket.emit("end_quiz");
   });
 
-  // ── Pantalla final ────────────────────────────────────────────────────
   document.getElementById("btn-restart").addEventListener("click", () => {
     socket.emit("restart_quiz");
   });
@@ -221,25 +216,22 @@
   document.getElementById("btn-copy-invoice").addEventListener("click", () => {
     const txt = document.getElementById("invoice-text").textContent;
     navigator.clipboard.writeText(txt).then(() => {
-      document.getElementById("btn-copy-invoice").textContent = "¡Copiado!";
+      document.getElementById("btn-copy-invoice").textContent = t('copied');
       setTimeout(() => {
-        document.getElementById("btn-copy-invoice").textContent = "Copiar Factura";
+        document.getElementById("btn-copy-invoice").textContent = t('copy-invoice');
       }, 2000);
     });
   });
-
-  // ── Eventos Socket.io ─────────────────────────────────────────────────
 
   socket.on("room_created", ({ roomCode, joinUrl }) => {
     document.getElementById("lobby-room-code").textContent = roomCode;
     document.getElementById("lobby-join-url").textContent = joinUrl;
     document.getElementById("lobby-qr-img").src = `/api/qr?url=${encodeURIComponent(joinUrl)}`;
-    // Resetear lista de jugadores al reiniciar
     document.getElementById("player-list").innerHTML =
-      '<em class="text-muted" style="font-size:.88rem">Esperando participantes…</em>';
+      `<em class="text-muted" style="font-size:.88rem">${t('waiting-players')}</em>`;
     document.getElementById("player-count").textContent = "0";
     document.getElementById("btn-start-quiz").disabled = true;
-    document.getElementById("lobby-hint").textContent = "Se necesita al menos 1 jugador";
+    document.getElementById("lobby-hint").textContent = t('need-one-player');
     showScreen("screen-lobby");
   });
 
@@ -251,8 +243,8 @@
       .join("");
     document.getElementById("btn-start-quiz").disabled = count === 0;
     document.getElementById("lobby-hint").textContent = count === 0
-      ? "Se necesita al menos 1 jugador"
-      : `${count} jugador${count !== 1 ? "es" : ""} listo${count !== 1 ? "s" : ""}`;
+      ? t('need-one-player')
+      : t(count === 1 ? 'players-ready' : 'players-ready-plural', count);
   });
 
   socket.on("quiz_started", () => {
@@ -268,9 +260,9 @@
     currentOptions = options;
     currentQuestion = text;
 
-    document.getElementById("host-q-counter").textContent = `Pregunta ${index + 1} de ${total}`;
+    document.getElementById("host-q-counter").textContent = t('question-counter', index + 1, total);
     document.getElementById("host-q-text").textContent = text;
-    document.getElementById("host-answered-count").textContent = `0 / ${totalPlayers} respondieron`;
+    document.getElementById("host-answered-count").textContent = t('answered', 0, totalPlayers);
     document.getElementById("host-live-leaderboard").innerHTML = buildLeaderboard(lastLeaderboard);
 
     showScreen("screen-question");
@@ -280,8 +272,7 @@
   });
 
   socket.on("answer_stats", ({ answeredCount, totalPlayers }) => {
-    document.getElementById("host-answered-count").textContent =
-      `${answeredCount} / ${totalPlayers} respondieron`;
+    document.getElementById("host-answered-count").textContent = t('answered', answeredCount, totalPlayers);
   });
 
   socket.on("question_ended", ({ correct, explanation, stats, leaderboard, questionIndex, isLastQuestion }) => {
@@ -295,30 +286,23 @@
     lastLeaderboard = leaderboard;
     document.getElementById("res-leaderboard").innerHTML = buildLeaderboard(leaderboard);
 
-    // Hide end button on last question (quiz ends automatically)
     document.getElementById("btn-end-quiz-early").style.display = isLastQuestion ? "none" : "";
 
     showScreen("screen-results");
   });
 
-  // Auto-advance countdown display on the results screen
   let cancelAdvance = null;
   socket.on("auto_advance", ({ seconds }) => {
     if (cancelAdvance) cancelAdvance();
-    cancelAdvance = startCountdown(
-      seconds,
-      () => {},
-      "advance-bar",
-      "advance-countdown"
-    );
+    cancelAdvance = startCountdown(seconds, () => {}, "advance-bar", "advance-countdown");
   });
 
   socket.on("quiz_ended", ({ leaderboard, rewardInfo }) => {
     const winner = leaderboard[0];
     document.getElementById("final-winner-name").textContent =
-      winner ? "🥇 " + winner.nickname : "Sin jugadores";
+      winner ? "🥇 " + winner.nickname : t('no-players');
     document.getElementById("final-winner-sats").textContent =
-      winner ? `${fmt(winner.score)} puntos` : "";
+      winner ? `${fmt(winner.score)} ${t('points')}` : "";
 
     if (rewardInfo) {
       if (rewardInfo.success && rewardInfo.paymentRequest) {
@@ -332,16 +316,15 @@
       } else if (rewardInfo.manual) {
         document.getElementById("manual-payout-section").style.display = "block";
         document.getElementById("manual-sats").textContent =
-          `Enviar ${fmt(rewardInfo.satAmount)} sats manualmente`;
+          t('send-sats-manually', fmt(rewardInfo.satAmount));
         document.getElementById("final-winner-sats").textContent +=
-          ` — ${fmt(rewardInfo.satAmount)} sats a pagar`;
+          ` — ${fmt(rewardInfo.satAmount)} ${t('sats-to-pay')}`;
       }
     }
 
     document.getElementById("final-leaderboard").innerHTML = buildLeaderboard(leaderboard);
     showScreen("screen-final");
   });
-
 
 })();
 </script>

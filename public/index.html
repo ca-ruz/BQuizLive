@@ -23,23 +23,25 @@
 </head>
 <body>
 
+<button class="btn-lang">EN</button>
+
 <!-- ══════════════════════════════════════════════════════════════ UNIRSE ══ -->
 <div class="screen active" id="screen-join">
   <p class="logo">₿<span>Quiz</span></p>
-  <p class="tagline">Aprende Bitcoin. Gana Sats.</p>
+  <p class="tagline" data-i18n="tagline">Aprende Bitcoin. Gana Sats.</p>
 
   <div class="card">
     <div class="field">
-      <label for="inp-nickname">Tu apodo</label>
+      <label for="inp-nickname" data-i18n="your-nickname">Tu apodo</label>
       <input type="text" id="inp-nickname" placeholder="Satoshi" maxlength="20" autocomplete="off" />
     </div>
     <div class="field">
-      <label for="inp-room">Código de sala</label>
+      <label for="inp-room" data-i18n="room-code">Código de sala</label>
       <input type="text" id="inp-room" placeholder="ABCD" maxlength="6"
              autocomplete="off" autocapitalize="characters"
              style="font-family:monospace;font-size:1.4rem;letter-spacing:4px;text-transform:uppercase" />
     </div>
-    <button class="btn btn-primary" id="btn-join">Unirse al Quiz</button>
+    <button class="btn btn-primary" id="btn-join" data-i18n="btn-join">Unirse al Quiz</button>
     <p id="join-error" class="text-center mt-sm" style="color:#e21b3c;font-size:.9rem;min-height:1.2em"></p>
   </div>
 </div>
@@ -49,13 +51,13 @@
   <p class="logo">₿<span>Quiz</span></p>
   <div class="card text-center">
     <p style="font-size:2rem;margin-bottom:8px">⏳</p>
-    <h2 style="margin-bottom:6px">¡Ya estás dentro!</h2>
-    <p class="text-muted mb-sm">Esperando que el presentador inicie el quiz…</p>
+    <h2 style="margin-bottom:6px" data-i18n="waiting-title">¡Ya estás dentro!</h2>
+    <p class="text-muted mb-sm" data-i18n="waiting-subtitle">Esperando que el presentador inicie el quiz…</p>
     <p id="wait-name" style="font-size:1.3rem;font-weight:700;color:var(--accent);margin-bottom:4px"></p>
     <p id="wait-room" class="text-muted" style="font-family:monospace;letter-spacing:3px"></p>
     <hr class="divider" />
     <p class="text-muted" style="font-size:.9rem">
-      <span class="pulse">●</span> Quédate en esta página — el quiz iniciará automáticamente
+      <span class="pulse">●</span> <span data-i18n="waiting-stay">Quédate en esta página — el quiz iniciará automáticamente</span>
     </p>
   </div>
 </div>
@@ -78,8 +80,8 @@
 
     <div class="answered-overlay" id="answered-overlay" style="display:none">
       <p style="font-size:1.5rem;margin-bottom:4px">✔</p>
-      <p style="font-weight:700;margin-bottom:2px">¡Respuesta enviada!</p>
-      <p class="text-muted" style="font-size:.9rem"><span class="pulse">●</span> Esperando a los demás…</p>
+      <p style="font-weight:700;margin-bottom:2px" data-i18n="answer-sent">¡Respuesta enviada!</p>
+      <p class="text-muted" style="font-size:.9rem"><span class="pulse">●</span> <span data-i18n="waiting-others">Esperando a los demás…</span></p>
     </div>
   </div>
 </div>
@@ -94,7 +96,7 @@
     <div class="explanation"   id="result-explanation"></div>
 
     <hr class="divider" />
-    <p class="section-title">Marcador</p>
+    <p class="section-title" data-i18n="leaderboard">Marcador</p>
     <div class="leaderboard" id="result-leaderboard"></div>
   </div>
 </div>
@@ -104,44 +106,44 @@
   <p class="logo">₿<span>Quiz</span></p>
   <div class="card" style="max-width:500px;text-align:center">
 
-    <!-- Sección ganador -->
     <div id="final-winner-section" style="display:none">
       <p class="winner-trophy">🎉</p>
-      <p class="winner-shout">¡GANASTE!</p>
-      <p class="winner-sub">El presentador te enviará los sats.<br>¡Bien jugado!</p>
+      <p class="winner-shout" data-i18n="you-won">¡GANASTE!</p>
+      <p class="winner-sub" data-i18n="winner-sub">El presentador te enviará los sats.<br>¡Bien jugado!</p>
     </div>
 
-    <!-- Sección participantes (no ganadores) -->
     <div id="final-participant-section" style="display:none">
       <p style="font-size:3rem;margin-bottom:6px">⚡</p>
-      <h2 style="margin-bottom:6px">¡Gracias por participar!</h2>
+      <h2 style="margin-bottom:6px" data-i18n="thanks">¡Gracias por participar!</h2>
       <p id="final-position-msg" style="color:var(--accent);font-weight:700;font-size:1.1rem;margin-bottom:4px"></p>
       <p id="final-winner-announce" class="text-muted" style="font-size:.92rem;margin-bottom:16px"></p>
     </div>
 
     <hr class="divider" />
-    <p class="section-title">Clasificación Final</p>
+    <p class="section-title" data-i18n="final-standings">Clasificación Final</p>
     <div class="leaderboard" id="final-leaderboard"></div>
     <hr class="divider" />
-    <p class="text-muted" style="font-size:.9rem">
+    <p class="text-muted" style="font-size:.9rem" data-i18n="tip">
       Tip: ¡corre tu propio nodo Bitcoin y únete a la Red Lightning!
     </p>
   </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
+<script src="i18n.js"></script>
 <script src="client.js"></script>
 <script>
 (function () {
   "use strict";
 
+  initLang();
+
   const socket = io();
   let myPlayerId = null;
   let myNickname = "";
   let cancelTimer = null;
-  let autoAdvanceTimer = null; // tracked so quiz_ended can cancel it
+  let autoAdvanceTimer = null;
 
-  // Prellenar código de sala desde ?room= en la URL
   const urlRoom = new URLSearchParams(location.search).get("room");
   if (urlRoom) document.getElementById("inp-room").value = urlRoom.toUpperCase();
 
@@ -160,9 +162,9 @@
     const roomCode = document.getElementById("inp-room").value.trim().toUpperCase();
     const errEl = document.getElementById("join-error");
 
-    if (!nickname) { errEl.textContent = "Por favor ingresa un apodo."; return; }
-    if (nickname.length > 20) { errEl.textContent = "El apodo debe tener máximo 20 caracteres."; return; }
-    if (!roomCode) { errEl.textContent = "Por favor ingresa el código de sala."; return; }
+    if (!nickname) { errEl.textContent = t('err-no-nickname'); return; }
+    if (nickname.length > 20) { errEl.textContent = t('err-nickname-long'); return; }
+    if (!roomCode) { errEl.textContent = t('err-no-room'); return; }
 
     errEl.textContent = "";
     document.getElementById("btn-join").disabled = true;
@@ -173,7 +175,7 @@
     myPlayerId = playerId;
     myNickname = nickname;
     document.getElementById("wait-name").textContent = nickname;
-    document.getElementById("wait-room").textContent = "Sala: " + roomCode;
+    document.getElementById("wait-room").textContent = t('room-prefix') + roomCode;
     showScreen("screen-waiting");
   });
 
@@ -188,7 +190,7 @@
 
   socket.on("question_started", ({ index, total, text, options, timeLimit, alreadyAnswered }) => {
     document.getElementById("answered-overlay").style.display = "none";
-    document.getElementById("q-counter").textContent = `Pregunta ${index + 1} de ${total}`;
+    document.getElementById("q-counter").textContent = t('question-counter', index + 1, total);
     document.getElementById("q-text").textContent = text;
 
     const grid = document.getElementById("answers-grid");
@@ -204,7 +206,6 @@
 
     showScreen("screen-question");
 
-    // Rejoining player already submitted an answer — show the overlay and lock buttons
     if (alreadyAnswered) {
       disableAnswerButtons();
       document.getElementById("answered-overlay").style.display = "block";
@@ -217,13 +218,12 @@
   });
 
   function submitAnswer(index) {
-    // Immediately show which button was picked and dim the rest
     document.querySelectorAll(".answer-btn").forEach((btn, i) => {
       btn.disabled = true;
       if (i === index) {
-        btn.classList.add("selected-ans");   // bright ring around the chosen option
+        btn.classList.add("selected-ans");
       } else {
-        btn.style.filter = "brightness(.4)"; // dim the others
+        btn.style.filter = "brightness(.4)";
       }
     });
     socket.emit("submit_answer", { answerIndex: index });
@@ -233,27 +233,21 @@
   socket.on("question_ended", ({ correct, explanation, leaderboard, playerResult }) => {
     if (cancelTimer) { cancelTimer(); cancelTimer = null; }
 
-    // answerIndex == -1 means the player never submitted an answer in time
     const myAnswer = playerResult?.answerIndex ?? -1;
     const didAnswer = myAnswer !== -1;
 
-    // Colour buttons:
-    //   correct answer       → always highlight green
-    //   player's wrong pick  → dim red
-    //   everything else      → neutral dim (no false implication of selection)
     document.querySelectorAll(".answer-btn").forEach((btn, i) => {
       btn.disabled = true;
-      // Clear the selection highlight before applying reveal colours
       btn.classList.remove("selected-ans");
       btn.style.filter = "";
       btn.style.transform = "";
 
       if (i === correct) {
-        btn.classList.add("correct-ans");           // always show the right answer
+        btn.classList.add("correct-ans");
       } else if (didAnswer && i === myAnswer) {
-        btn.classList.add("wrong-ans");              // player's wrong choice
+        btn.classList.add("wrong-ans");
       } else {
-        btn.style.filter = "brightness(.35)";        // neutral dim
+        btn.style.filter = "brightness(.35)";
       }
     });
 
@@ -262,19 +256,19 @@
 
       if (!didAnswer) {
         emoji      = "⏰";
-        labelText  = "Sin respuesta";
+        labelText  = t('no-answer');
         labelClass = "incorrect";
-        pointsText = "+0 puntos";
+        pointsText = t('points-earned', 0);
       } else if (playerResult.correct) {
         emoji      = "✅";
-        labelText  = "¡Correcto!";
+        labelText  = t('correct');
         labelClass = "correct";
-        pointsText = `+${fmt(playerResult.pointsEarned)} puntos`;
+        pointsText = t('points-earned', fmt(playerResult.pointsEarned));
       } else {
         emoji      = "❌";
-        labelText  = "¡Incorrecto!";
+        labelText  = t('incorrect');
         labelClass = "incorrect";
-        pointsText = "+0 puntos";
+        pointsText = t('points-earned', 0);
       }
 
       document.getElementById("result-emoji").textContent = emoji;
@@ -284,7 +278,7 @@
 
       document.getElementById("result-points").textContent = pointsText;
       document.getElementById("result-total").textContent =
-        playerResult ? `Total: ${fmt(playerResult.totalScore)} puntos` : "";
+        playerResult ? t('total-score', fmt(playerResult.totalScore)) : "";
       document.getElementById("result-explanation").textContent = explanation || "";
       document.getElementById("result-leaderboard").innerHTML = buildLeaderboard(leaderboard, myPlayerId);
 
@@ -292,32 +286,28 @@
     }, 1800);
   });
 
-  // Server auto-advances — player stays on result screen until question_started fires
-  socket.on("auto_advance", ({ seconds }) => {
+  socket.on("auto_advance", () => {
     if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
   });
 
   socket.on("quiz_ended", ({ leaderboard, winnerNickname }) => {
-    // Cancel any pending auto-advance so it doesn't redirect away from this screen
     if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
     if (cancelTimer) { cancelTimer(); cancelTimer = null; }
 
     const isWinner = winnerNickname === myNickname;
 
-    // Show the right section
     document.getElementById("final-winner-section").style.display      = isWinner ? "block" : "none";
     document.getElementById("final-participant-section").style.display = isWinner ? "none"  : "block";
 
     if (!isWinner) {
-      // Tell the player their finishing position and score
       const myPos = leaderboard.findIndex(p => p.id === myPlayerId);
       if (myPos !== -1) {
         const medal = ["🥇","🥈","🥉"][myPos] || `#${myPos + 1}`;
         document.getElementById("final-position-msg").textContent =
-          `Terminaste en el lugar ${medal} con ${fmt(leaderboard[myPos].score)} puntos`;
+          t('finish-position', medal, fmt(leaderboard[myPos].score));
       }
       document.getElementById("final-winner-announce").textContent =
-        `Ganador/a: ${winnerNickname} — ¡felicidades!`;
+        t('winner-announce', winnerNickname);
     }
 
     document.getElementById("final-leaderboard").innerHTML = buildLeaderboard(leaderboard, myPlayerId);
@@ -325,7 +315,7 @@
   });
 
   socket.on("host_disconnected", () => {
-    alert("El presentador se desconectó. El quiz podría reanudarse en breve.");
+    alert(t('host-disconnected'));
   });
 
   socket.on("quiz_restarted", () => {
