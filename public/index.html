@@ -180,10 +180,11 @@
     <h2 style="margin-bottom:8px" data-i18n="payout-title">¡RECLAMA TU PREMIO!</h2>
     <p class="text-muted mb-sm" data-i18n="payout-subtitle">Ingresa tu dirección Lightning o factura</p>
     <p style="font-size:1.8rem;font-weight:700;color:var(--accent);margin-bottom:20px" id="payout-amount">0 sats</p>
+    <p class="text-muted mb-sm" style="font-size:.9rem" id="payout-fee-note"></p>
     
     <div class="field">
       <label for="inp-payout-dest" data-i18n="payout-dest-label">Lightning Address / Invoice / BOLT12</label>
-      <input type="text" id="inp-payout-dest" placeholder="usuario@wallet.com" autocomplete="off" />
+      <input type="text" id="inp-payout-dest" placeholder="lnbc..." autocomplete="off" />
     </div>
     
     <button class="btn btn-primary" id="btn-claim" data-i18n="btn-claim">Cobrar Premio</button>
@@ -210,14 +211,23 @@
   let cancelTimer = null;
   let autoAdvanceTimer = null;
   let poolRewardSats = 0;
+  let payoutAmountSats = 0;
+  let feeReserveSats = 0;
 
   const urlRoom = new URLSearchParams(location.search).get("room");
   if (urlRoom) document.getElementById("inp-room").value = urlRoom.toUpperCase();
+  let savedSession = loadSavedSession();
+  if (savedSession) {
+    document.getElementById("inp-room").value = savedSession.roomCode;
+    document.getElementById("inp-nickname").value = savedSession.nickname;
+  }
 
   document.getElementById("btn-join").addEventListener("click", joinQuiz);
   document.getElementById("payment-request").addEventListener("click", copyPaymentRequest);
   document.getElementById("btn-show-payout").addEventListener("click", () => {
-    document.getElementById("payout-amount").textContent = `${fmt(poolRewardSats)} sats`;
+    document.getElementById("payout-amount").textContent = `${fmt(payoutAmountSats)} sats`;
+    document.getElementById("payout-fee-note").textContent =
+      t('payout-create-exact', fmt(payoutAmountSats), fmt(poolRewardSats), fmt(feeReserveSats));
     showScreen("screen-winner-payout");
   });
   document.getElementById("btn-claim").addEventListener("click", processPayout);
@@ -233,7 +243,9 @@
 
     errEl.textContent = "";
     document.getElementById("btn-join").disabled = true;
-    socket.emit("join_room", { roomCode, nickname });
+    const saved = loadSavedSession();
+    const playerId = saved && saved.roomCode === roomCode && saved.nickname === nickname ? saved.playerId : null;
+    socket.emit("join_room", { roomCode, nickname, playerId });
   }
 
   socket.on("payment_required", ({ paymentRequest, amount }) => {
@@ -276,15 +288,50 @@
   socket.on("join_success", ({ playerId, nickname, roomCode }) => {
     myPlayerId = playerId;
     myNickname = nickname;
+    saveSession({ roomCode, nickname, playerId });
     document.getElementById("wait-name").textContent = nickname;
     document.getElementById("wait-room").textContent = t('room-prefix') + roomCode;
     showScreen("screen-waiting");
   });
 
   socket.on("join_error", ({ message }) => {
+    if (savedSession) {
+      localStorage.removeItem("bquiz-player-session");
+      savedSession = null;
+    }
+    showScreen("screen-join");
     document.getElementById("join-error").textContent = message;
     document.getElementById("btn-join").disabled = false;
   });
+
+  function loadSavedSession() {
+    try {
+      const session = JSON.parse(localStorage.getItem("bquiz-player-session") || "null");
+      if (!session?.roomCode || !session?.nickname || !session?.playerId) return null;
+      if (urlRoom && session.roomCode !== urlRoom.toUpperCase()) return null;
+      return session;
+    } catch {
+      return null;
+    }
+  }
+
+  function saveSession(session) {
+    localStorage.setItem("bquiz-player-session", JSON.stringify(session));
+  }
+
+  function rejoinSavedSession(session) {
+    myPlayerId = session.playerId;
+    myNickname = session.nickname;
+    document.getElementById("wait-name").textContent = session.nickname;
+    document.getElementById("wait-room").textContent = t('room-prefix') + session.roomCode;
+    document.getElementById("btn-join").disabled = true;
+    showScreen("screen-waiting");
+    socket.emit("join_room", {
+      roomCode: session.roomCode,
+      nickname: session.nickname,
+      playerId: session.playerId
+    });
+  }
 
   function disableAnswerButtons() {
     document.querySelectorAll(".answer-btn").forEach(btn => { btn.disabled = true; });
@@ -397,8 +444,11 @@
     document.getElementById("final-participant-section").style.display = isWinner ? "none"  : "block";
 
     if (isWinner && rewardInfo?.paidMode) {
-      poolRewardSats = rewardInfo.satAmount;
-      document.getElementById("winner-sub-msg").textContent = t('winner-pool-sub', fmt(poolRewardSats));
+      poolRewardSats = rewardInfo.poolAmount || rewardInfo.satAmount;
+      payoutAmountSats = rewardInfo.payoutAmount || poolRewardSats;
+      feeReserveSats = rewardInfo.feeReserveSat || 0;
+      document.getElementById("winner-sub-msg").textContent =
+        t('winner-pool-sub', fmt(poolRewardSats), fmt(payoutAmountSats), fmt(feeReserveSats));
       document.getElementById("btn-show-payout").style.display = "inline-block";
     }
 
@@ -429,9 +479,10 @@
     socket.emit("process_payout", { invoice: dest });
   }
 
-  socket.on("payout_confirmed", ({ preimage, winnerNickname }) => {
+  socket.on("payout_confirmed", ({ preimage, winnerNickname, payoutSummary }) => {
     document.getElementById("payout-loading").style.display = "none";
-    alert(t('payout-success', winnerNickname));
+    const summaryText = formatPayoutSummary(payoutSummary);
+    alert(t('payout-success', winnerNickname) + (summaryText ? "\n\n" + summaryText : ""));
     location.reload();
   });
 
@@ -449,6 +500,11 @@
     showScreen("screen-join");
     document.getElementById("btn-join").disabled = false;
   });
+
+  if (savedSession && urlRoom) {
+    socket.on("connect", () => rejoinSavedSession(savedSession));
+    if (socket.connected) rejoinSavedSession(savedSession);
+  }
 })();
 </script>
 </body>
