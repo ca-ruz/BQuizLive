@@ -66,13 +66,20 @@ describe("Phoenixd Manager", () => {
       assert.strictEqual(options.body.get("invoice"), "lnbc1...");
       return {
         ok: true,
-        json: async () => ({ status: "succeeded", preimage: "fake-preimage" })
+        json: async () => ({
+          status: "succeeded",
+          preimage: "fake-preimage",
+          sent: 214,
+          fees: 4840
+        })
       };
     });
 
     const result = await lightning.payWinner("lnbc1...");
     assert.strictEqual(result.success, true);
     assert.strictEqual(result.preimage, "fake-preimage");
+    assert.strictEqual(result.sentSat, 214);
+    assert.strictEqual(result.feeMsat, 4840);
   });
 
   test("payWinner handles payment failure", async () => {

@@ -17,6 +17,34 @@ function fmt(n) {
   return Number(n).toLocaleString();
 }
 
+function formatPayoutSummary(summary) {
+  if (!summary) return "";
+
+  const lines = [];
+  if (Number.isFinite(Number(summary.poolSat))) {
+    lines.push(t('payout-pool', fmt(summary.poolSat)));
+  }
+  if (Number.isFinite(Number(summary.payoutSat))) {
+    lines.push(t('payout-prize', fmt(summary.payoutSat)));
+  } else if (Number.isFinite(Number(summary.prizeSat))) {
+    lines.push(t('payout-prize', fmt(summary.prizeSat)));
+  }
+  if (Number.isFinite(Number(summary.reserveSat))) {
+    lines.push(t('payout-reserve', fmt(summary.reserveSat)));
+  }
+  if (Number.isFinite(Number(summary.feeMsat))) {
+    const feeSat = Number(summary.feeMsat) / 1000;
+    lines.push(t('payout-fee', fmt(feeSat.toFixed(3).replace(/\.?0+$/, "")), fmt(summary.feeMsat)));
+  }
+  if (Number.isFinite(Number(summary.sentSat))) {
+    lines.push(t('payout-total', fmt(summary.sentSat)));
+  }
+  if (Number.isFinite(Number(summary.reserveLeftSat))) {
+    lines.push(t('payout-reserve-left', fmt(summary.reserveLeftSat)));
+  }
+  return lines.join("\n");
+}
+
 /**
  * Escape HTML to prevent XSS when inserting user-supplied text.
  */

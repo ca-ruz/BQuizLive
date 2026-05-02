@@ -57,6 +57,7 @@ const BASE_URL = process.env.BASE_URL || `http://${getLocalIP()}:${PORT}`;
 const TIME_LIMIT = parseInt(process.env.QUESTION_TIME_LIMIT) || 21; // seconds (default 21)
 const SAT_PER_POINT = parseInt(process.env.SAT_PER_POINT) || 1;
 const ENTRY_FEE_SATS = parseInt(process.env.ENTRY_FEE_SATS) || 0; // Phase 3
+const PAYOUT_FEE_RESERVE_SATS = parseInt(process.env.PAYOUT_FEE_RESERVE_SATS) || 10;
 const RESULTS_DELAY = parseInt(process.env.RESULTS_DELAY) || 8; // seconds to display results before auto-advancing
 const QUESTION_COUNT = parseInt(process.env.QUESTION_COUNT) || allQuestions.length;
 
@@ -191,16 +192,17 @@ io.on("connection", (socket) => {
   //  PLAYER EVENTS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  socket.on("join_room", async ({ roomCode, nickname }) => {
+  socket.on("join_room", async ({ roomCode, nickname, playerId }) => {
     roomCode = String(roomCode || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
     nickname = String(nickname || "").trim().slice(0, 20);
+    playerId = String(playerId || "").trim();
 
     if (!nickname || !roomCode) {
       socket.emit("join_error", { message: "Datos de entrada inválidos." });
       return;
     }
 
-    const result = quizEngine.joinRoom(roomCode, nickname, socket.id);
+    const result = quizEngine.joinRoom(roomCode, nickname, socket.id, playerId);
 
     // If entry fee is required, generate invoice and wait for payment
     if (result.paymentRequired) {
@@ -218,6 +220,7 @@ io.on("connection", (socket) => {
             clearInterval(checkInterval);
             const player = quizEngine.confirmPayment(roomCode, invoice.paymentHash);
             if (player) {
+              socket.join(roomCode);
               socket.emit("join_success", {
                 playerId: player.id,
                 nickname: player.nickname,
@@ -341,9 +344,20 @@ io.on("connection", (socket) => {
     console.log(`[Payout] Processing for ${player.nickname} in ${room.code}...`);
     const payoutResult = await lightning.payWinner(invoice);
     if (payoutResult.success) {
+      const payout = getPayoutAmounts(room.poolAmount);
       io.to(room.code).emit("payout_confirmed", { 
         preimage: payoutResult.preimage,
-        winnerNickname: player.nickname 
+        winnerNickname: player.nickname,
+        payoutSummary: {
+          poolSat: payout.poolAmount,
+          payoutSat: payout.payoutAmount,
+          reserveSat: payout.feeReserveSat,
+          sentSat: payoutResult.sentSat,
+          feeMsat: payoutResult.feeMsat,
+          reserveLeftSat: Number.isFinite(Number(payoutResult.sentSat))
+            ? Math.max(0, payout.poolAmount - Number(payoutResult.sentSat))
+            : null
+        }
       });
       console.log(`[Payout] SUCCESS for ${player.nickname}`);
     } else {
@@ -402,6 +416,15 @@ function endQuestion(roomCode) {
   else setTimeout(() => launchQuestion(roomCode), RESULTS_DELAY * 1000);
 }
 
+function getPayoutAmounts(poolAmount) {
+  const feeReserveSat = Math.min(PAYOUT_FEE_RESERVE_SATS, Math.max(0, poolAmount - 1));
+  return {
+    poolAmount,
+    feeReserveSat,
+    payoutAmount: Math.max(1, poolAmount - feeReserveSat)
+  };
+}
+
 async function finishQuiz(roomCode) {
   const room = quizEngine.getRoom(roomCode);
   if (!room || room.state === "finished") return;
@@ -417,10 +440,14 @@ async function finishQuiz(roomCode) {
       : Math.max(1, Math.floor(winner.score * SAT_PER_POINT));
     
     if (room.entryFee > 0) {
+      const payout = getPayoutAmounts(room.poolAmount);
       // For paid quiz, we wait for winner to provide invoice
       rewardInfo = { 
         paidMode: true, 
-        satAmount, 
+        satAmount,
+        poolAmount: payout.poolAmount,
+        payoutAmount: payout.payoutAmount,
+        feeReserveSat: payout.feeReserveSat,
         winnerNickname: winner.nickname 
       };
     } else {
