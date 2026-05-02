@@ -345,21 +345,28 @@ io.on("connection", (socket) => {
     const payoutResult = await lightning.payWinner(invoice);
     if (payoutResult.success) {
       const payout = getPayoutAmounts(room.poolAmount);
+      const feeSat = Number.isFinite(Number(payoutResult.feeSat))
+        ? Number(payoutResult.feeSat)
+        : (Number.isFinite(Number(payoutResult.feeMsat)) ? Number(payoutResult.feeMsat) / 1000 : null);
+      const sentSat = Number.isFinite(Number(payoutResult.sentSat))
+        ? Number(payoutResult.sentSat)
+        : (feeSat !== null ? payout.payoutAmount + feeSat : null);
+      const reserveLeftSat = sentSat !== null ? Math.max(0, payout.poolAmount - sentSat) : null;
+      const payoutSummary = {
+        poolSat: payout.poolAmount,
+        payoutSat: payout.payoutAmount,
+        reserveSat: payout.feeReserveSat,
+        sentSat,
+        feeSat,
+        feeMsat: payoutResult.feeMsat,
+        reserveLeftSat
+      };
       io.to(room.code).emit("payout_confirmed", { 
         preimage: payoutResult.preimage,
         winnerNickname: player.nickname,
-        payoutSummary: {
-          poolSat: payout.poolAmount,
-          payoutSat: payout.payoutAmount,
-          reserveSat: payout.feeReserveSat,
-          sentSat: payoutResult.sentSat,
-          feeMsat: payoutResult.feeMsat,
-          reserveLeftSat: Number.isFinite(Number(payoutResult.sentSat))
-            ? Math.max(0, payout.poolAmount - Number(payoutResult.sentSat))
-            : null
-        }
+        payoutSummary
       });
-      console.log(`[Payout] SUCCESS for ${player.nickname}`);
+      console.log(`[Payout] SUCCESS for ${player.nickname}`, payoutSummary);
     } else {
       socket.emit("payout_error", { message: payoutResult.error });
       console.log(`[Payout] FAILED: ${payoutResult.error}`);
