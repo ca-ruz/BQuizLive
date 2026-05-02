@@ -451,5 +451,3 @@ server.listen(PORT, async () => {
   console.log(`  Entry Fee: ${ENTRY_FEE_SATS} sats`);
   console.log(`  Questions: ${QUESTION_COUNT} of ${allQuestions.length} (random)\n`);
 });
-n`);
-});

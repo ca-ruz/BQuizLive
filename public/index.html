@@ -20,6 +20,27 @@
       margin-bottom: 12px;
     }
     #payment-qr-container img { image-rendering: pixelated; }
+    #payment-request {
+      cursor: pointer;
+      font-family: "Courier New", monospace;
+      font-size: .75rem;
+      opacity: .75;
+      text-overflow: ellipsis;
+      border-color: rgba(255,119,0,.45);
+      color: rgba(255,119,0,.8);
+      box-shadow: 0 0 12px rgba(255,119,0,.16);
+    }
+    #payment-request:hover,
+    #payment-request:focus {
+      border-color: rgba(76,201,240,.65);
+      box-shadow: 0 0 16px rgba(76,201,240,.25);
+      color: #4cc9f0;
+    }
+    #payment-request.copied {
+      border-color: rgba(57,255,20,.75);
+      box-shadow: 0 0 18px rgba(57,255,20,.35);
+      color: var(--accent);
+    }
   </style>
 </head>
 <body>
@@ -58,7 +79,7 @@
     </div>
     <p style="font-size:1.4rem;font-weight:700;color:var(--accent);margin-bottom:12px" id="payment-amount">0 sats</p>
     <div class="field">
-      <input type="text" id="payment-request" readonly style="font-size:0.75rem;opacity:0.6;text-overflow:ellipsis" />
+      <input type="text" id="payment-request" readonly aria-label="Lightning invoice" />
     </div>
     <hr class="divider" />
     <p class="text-muted" style="font-size:.9rem">
@@ -194,6 +215,7 @@
   if (urlRoom) document.getElementById("inp-room").value = urlRoom.toUpperCase();
 
   document.getElementById("btn-join").addEventListener("click", joinQuiz);
+  document.getElementById("payment-request").addEventListener("click", copyPaymentRequest);
   document.getElementById("btn-show-payout").addEventListener("click", () => {
     document.getElementById("payout-amount").textContent = `${fmt(poolRewardSats)} sats`;
     showScreen("screen-winner-payout");
@@ -215,11 +237,41 @@
   }
 
   socket.on("payment_required", ({ paymentRequest, amount }) => {
-    document.getElementById("payment-qr").src = `/api/qr?url=${paymentRequest}`;
+    document.getElementById("payment-qr").src = `/api/qr?url=${encodeURIComponent(paymentRequest)}`;
     document.getElementById("payment-amount").textContent = `${fmt(amount)} sats`;
     document.getElementById("payment-request").value = paymentRequest;
     showScreen("screen-payment");
   });
+
+  async function copyToClipboard(text, sourceEl) {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    sourceEl.focus();
+    sourceEl.select();
+    sourceEl.setSelectionRange(0, text.length);
+    if (!document.execCommand("copy")) {
+      throw new Error("copy failed");
+    }
+    sourceEl.setSelectionRange(0, 0);
+    sourceEl.blur();
+  }
+
+  function copyPaymentRequest() {
+    const el = document.getElementById("payment-request");
+    const paymentRequest = el.value;
+    if (!paymentRequest) return;
+
+    copyToClipboard(paymentRequest, el).then(() => {
+      el.classList.add("copied");
+      setTimeout(() => el.classList.remove("copied"), 1800);
+    }).catch(() => {
+      el.focus();
+      el.select();
+    });
+  }
 
   socket.on("join_success", ({ playerId, nickname, roomCode }) => {
     myPlayerId = playerId;
