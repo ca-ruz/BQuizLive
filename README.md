@@ -37,7 +37,7 @@ cp .env.example .env
 ```
 
 - **Modo Manual**: Deja `ENTRY_FEE_SATS=0`. Gratis para jugadores, pago manual del host.
-- **Modo Pool**: Configura `ENTRY_FEE_SATS` (ej: 100) y elige un `LN_ENGINE` (ej: phoenixd).
+- **Modo Pool**: Configura `ENTRY_FEE_SATS` (ej: 2100) y elige un `LN_ENGINE` (ej: phoenixd).
 
 ### 3. Correr el servidor
 
@@ -76,7 +76,8 @@ npm run dev
 ## Variables de entorno principales
 
 ```env
-ENTRY_FEE_SATS=100             # Costo de entrada (0 = Manual)
+ENTRY_FEE_SATS=2100            # Costo de entrada (0 = Manual)
+PAYOUT_FEE_RESERVE_SATS=10     # Reserva del pozo para fees de payout
 LN_ENGINE=phoenixd             # none, phoenixd, breez-liquid, mdk
 
 # Config Phoenixd

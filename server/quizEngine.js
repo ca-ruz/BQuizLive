@@ -38,7 +38,7 @@ class QuizEngine {
    * - If the game is running and the same nickname already exists, reconnects that player.
    * Returns { playerId, player, rejoined? } or { error }
    */
-  joinRoom(roomCode, nickname, socketId) {
+  joinRoom(roomCode, nickname, socketId, existingPlayerId = null) {
     const room = this.rooms.get(roomCode);
     if (!room) return { error: "Sala no encontrada. Verifica tu código." };
 
@@ -48,8 +48,8 @@ class QuizEngine {
     // Check if this nickname already exists in the room (rejoin case)
     for (const [playerId, player] of room.players.entries()) {
       if (player.nickname.toLowerCase() === nicknameLC) {
-        if (room.state !== "lobby") {
-          // Game in progress — allow reconnect by updating socket
+        if (room.state !== "lobby" || existingPlayerId === playerId) {
+          // Allow reconnect by updating socket. In lobby, require the saved player id.
           player.socketId = socketId;
           return { playerId, player, rejoined: true };
         } else {

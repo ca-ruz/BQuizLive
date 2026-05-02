@@ -340,7 +340,8 @@
 
     if (rewardInfo) {
       if (rewardInfo.paidMode) {
-        document.getElementById("final-winner-sats").textContent = `🏆 ${fmt(rewardInfo.satAmount)} sats`;
+        document.getElementById("final-winner-sats").textContent =
+          `🏆 ${fmt(rewardInfo.poolAmount || rewardInfo.satAmount)} sats pool → ${fmt(rewardInfo.payoutAmount || rewardInfo.satAmount)} sats payout`;
         document.getElementById("payout-status-section").style.display = "block";
         document.getElementById("payout-status-msg").textContent = t('waiting-players'); // Use as placeholder for "Waiting for winner..."
         document.getElementById("payout-status-msg").style.color = "var(--muted)";
@@ -365,9 +366,12 @@
     showScreen("screen-final");
   });
 
-  socket.on("payout_confirmed", ({ preimage, winnerNickname }) => {
+  socket.on("payout_confirmed", ({ preimage, winnerNickname, payoutSummary }) => {
+    const summaryText = formatPayoutSummary(payoutSummary);
     document.getElementById("payout-status-section").style.display = "block";
-    document.getElementById("payout-status-msg").textContent = "✅ " + t('payout-success', winnerNickname);
+    document.getElementById("payout-status-msg").textContent =
+      "✅ " + t('payout-success', winnerNickname) + (summaryText ? "\n" + summaryText : "");
+    document.getElementById("payout-status-msg").style.whiteSpace = "pre-line";
     document.getElementById("payout-status-msg").style.color = "var(--accent)";
   });
 

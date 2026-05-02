@@ -140,7 +140,14 @@ const PhoenixdManager = {
       if (data.status === "failed") {
         throw new Error(data.reason || "Payment failed");
       }
-      return { success: true, preimage: data.preimage };
+      return {
+        success: true,
+        preimage: data.preimage || data.paymentPreimage,
+        paymentHash: data.paymentHash,
+        sentSat: data.sent,
+        feeMsat: data.fees,
+        raw: data
+      };
     } catch (err) {
       console.error("[Lightning] Phoenixd error paying winner:", err.message);
       return { success: false, error: err.message };

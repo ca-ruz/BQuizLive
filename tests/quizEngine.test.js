@@ -92,6 +92,13 @@ describe("joinRoom", () => {
     assert.ok(result.error);
   });
 
+  test("allows lobby reconnect with matching saved player id", () => {
+    const { playerId } = quizEngine.joinRoom(code, "Alice", "socket-old");
+    const result = quizEngine.joinRoom(code, "Alice", "socket-new", playerId);
+    assert.strictEqual(result.rejoined, true);
+    assert.strictEqual(result.player.socketId, "socket-new");
+  });
+
   test("rejects new players once game is in progress", () => {
     quizEngine.startQuestion(code, 0);
     const result = quizEngine.joinRoom(code, "Latecomer", "socket-late");
