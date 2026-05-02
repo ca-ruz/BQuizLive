@@ -32,7 +32,9 @@ function formatPayoutSummary(summary) {
   if (Number.isFinite(Number(summary.reserveSat))) {
     lines.push(t('payout-reserve', fmt(summary.reserveSat)));
   }
-  if (Number.isFinite(Number(summary.feeMsat))) {
+  if (Number.isFinite(Number(summary.feeSat))) {
+    lines.push(t('payout-fee-sat', fmt(summary.feeSat)));
+  } else if (Number.isFinite(Number(summary.feeMsat))) {
     const feeSat = Number(summary.feeMsat) / 1000;
     lines.push(t('payout-fee', fmt(feeSat.toFixed(3).replace(/\.?0+$/, "")), fmt(summary.feeMsat)));
   }

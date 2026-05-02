@@ -82,6 +82,24 @@ describe("Phoenixd Manager", () => {
     assert.strictEqual(result.feeMsat, 4840);
   });
 
+  test("payWinner handles routingFeeSat response", async () => {
+    mock.method(global, 'fetch', async () => {
+      return {
+        ok: true,
+        json: async () => ({
+          paymentPreimage: "fake-preimage",
+          routingFeeSat: 13
+        })
+      };
+    });
+
+    const result = await lightning.payWinner("lnbc1...");
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.preimage, "fake-preimage");
+    assert.strictEqual(result.feeSat, 13);
+    assert.strictEqual(result.feeMsat, 13000);
+  });
+
   test("payWinner handles payment failure", async () => {
     mock.method(global, 'fetch', async () => {
       return {
