@@ -13,6 +13,7 @@ const assert = require("node:assert/strict");
 const lightning = require("../server/lightning");
 
 function clearLightningEnv() {
+  delete process.env.LN_ENGINE;
   delete process.env.NWC_URL;
   delete process.env.LND_REST_URL;
   delete process.env.LND_MACAROON;
@@ -66,6 +67,11 @@ describe("activeMethod", () => {
     process.env.LND_MACAROON = "deadbeef1234";
     assert.strictEqual(lightning.activeMethod(), "nwc");
   });
+
+  test("returns 'phoenixd' when LN_ENGINE is set to phoenixd", () => {
+    process.env.LN_ENGINE = "phoenixd";
+    assert.strictEqual(lightning.activeMethod(), "phoenixd");
+  });
 });
 
 // ─── isConfigured ─────────────────────────────────────────────────────────────
@@ -86,6 +92,11 @@ describe("isConfigured", () => {
   test("returns true when LND is configured", () => {
     process.env.LND_REST_URL = "https://my-node:8080";
     process.env.LND_MACAROON = "deadbeef";
+    assert.strictEqual(lightning.isConfigured(), true);
+  });
+
+  test("returns true when phoenixd is configured", () => {
+    process.env.LN_ENGINE = "phoenixd";
     assert.strictEqual(lightning.isConfigured(), true);
   });
 });

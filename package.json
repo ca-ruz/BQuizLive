@@ -10,7 +10,9 @@
   },
   "license": "GPL-3.0-or-later",
   "dependencies": {
+    "@breeztech/breez-sdk-liquid": "^0.12.3-dev1",
     "@getalby/sdk": "^3.7.0",
+    "@moneydevkit/core": "^0.16.0",
     "dotenv": "^16.4.5",
     "express": "^4.18.3",
     "node-fetch": "^2.7.0",

@@ -9,13 +9,16 @@ class QuizEngine {
 
   // ─── Room lifecycle ────────────────────────────────────────────────────────
 
-  createRoom(hostSocketId, questions) {
+  createRoom(hostSocketId, questions, entryFee = 0) {
     const roomCode = this._generateRoomCode();
     const room = {
       code: roomCode,
       hostSocketId,
       questions,                // array of questions selected for this room
+      entryFee,                 // cost in sats to join
+      poolAmount: 0,            // sum of all paid entry fees
       players: new Map(),       // playerId -> player object
+      pendingPlayers: new Map(),// paymentHash -> player object (waiting for settlement)
       state: "lobby",           // lobby | question | results | finished
       currentQuestionIndex: -1, // index into room.questions
       questionTimer: null,      // server-side auto-end timeout handle (timer expires)
@@ -55,9 +58,21 @@ class QuizEngine {
       }
     }
 
+    // Check if nickname is already in pending (Phase 3)
+    for (const pending of room.pendingPlayers.values()) {
+      if (pending.nickname.toLowerCase() === nicknameLC) {
+        return { error: "Ese apodo ya está esperando pago. Intenta de nuevo en un momento." };
+      }
+    }
+
     // Reject new joins once the game has started
     if (room.state !== "lobby") {
       return { error: "El juego ya está en curso." };
+    }
+
+    // If entry fee is required, don't add to players yet (server.js will handle pending)
+    if (room.entryFee > 0) {
+      return { paymentRequired: true, entryFee: room.entryFee };
     }
 
     const playerId = this._generateId();
@@ -70,6 +85,43 @@ class QuizEngine {
     };
     room.players.set(playerId, player);
     return { playerId, player };
+  }
+
+  /**
+   * Agrega un jugador a la lista de espera de pago (Phase 3).
+   */
+  addPendingPlayer(roomCode, nickname, socketId, paymentHash) {
+    const room = this.rooms.get(roomCode);
+    if (!room) return null;
+
+    const playerId = this._generateId();
+    const player = {
+      id: playerId,
+      nickname,
+      socketId,
+      paymentHash,
+      score: 0,
+      answers: []
+    };
+    room.pendingPlayers.set(paymentHash, player);
+    return player;
+  }
+
+  /**
+   * Confirma el pago y mueve al jugador de pendiente a activo (Phase 3).
+   */
+  confirmPayment(roomCode, paymentHash) {
+    const room = this.rooms.get(roomCode);
+    if (!room) return null;
+
+    const player = room.pendingPlayers.get(paymentHash);
+    if (!player) return null;
+
+    room.pendingPlayers.delete(paymentHash);
+    room.players.set(player.id, player);
+    room.poolAmount += room.entryFee;
+    
+    return player;
   }
 
   // ─── Lookup helpers ────────────────────────────────────────────────────────
@@ -127,9 +179,6 @@ class QuizEngine {
 
   /**
    * Score all answers for the current question.
-   * Scoring: correct answer → 500 base + up to 500 speed bonus.
-   * Wrong / no answer → 0 points.
-   * Returns a map of playerId -> { score, correct }
    */
   scoreQuestion(roomCode, question, timeLimit) {
     const room = this.rooms.get(roomCode);
@@ -167,7 +216,6 @@ class QuizEngine {
 
   // ─── Stats & leaderboard ───────────────────────────────────────────────────
 
-  /** Returns sorted array of { id, nickname, score } */
   getLeaderboard(roomCode) {
     const room = this.rooms.get(roomCode);
     if (!room) return [];
@@ -176,7 +224,6 @@ class QuizEngine {
       .sort((a, b) => b.score - a.score);
   }
 
-  /** Returns per-option answer counts and percentages */
   getAnswerStats(roomCode, numOptions) {
     const room = this.rooms.get(roomCode);
     if (!room) return [];
@@ -217,7 +264,7 @@ class QuizEngine {
   // ─── Helpers ───────────────────────────────────────────────────────────────
 
   _generateRoomCode() {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I confusion
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let code;
     do {
       code = Array.from({ length: 4 }, () =>
@@ -232,5 +279,4 @@ class QuizEngine {
   }
 }
 
-// Export a singleton — the whole server shares one engine instance
 module.exports = new QuizEngine();

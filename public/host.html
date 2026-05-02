@@ -55,6 +55,12 @@
       </div>
     </div>
 
+    <!-- Phase 5: Pool Status -->
+    <div class="card" id="lobby-pool-card" style="display:none;text-align:center;margin-bottom:14px">
+      <p class="section-title" id="lobby-pool-label">Pozo Actual</p>
+      <div style="font-size:1.8rem;font-weight:900;color:var(--accent)" id="lobby-pool-amount">0 sats</div>
+    </div>
+
     <div class="card">
       <p class="section-title"><span data-i18n="players-connected">Jugadores conectados:</span> <span id="player-count" style="color:var(--accent)">0</span></p>
       <div class="player-list" id="player-list">
@@ -158,6 +164,11 @@
         </p>
         <p style="font-size:1.3rem;font-weight:900;color:var(--accent)" id="manual-sats"></p>
       </div>
+
+      <!-- Phase 5: Payout Settlement Status -->
+      <div id="payout-status-section" style="display:none;margin-top:20px;padding:12px;background:rgba(57,255,20,.1);border:1px solid var(--accent);border-radius:8px">
+        <p style="font-weight:700;color:var(--accent)" id="payout-status-msg"></p>
+      </div>
     </div>
 
     <div class="card" style="margin-bottom:14px;max-width:540px;margin-left:auto;margin-right:auto">
@@ -183,12 +194,23 @@
   let currentOptions = [];
   let currentQuestion = "";
   let lastLeaderboard = [];
+  let currentEntryFee = 0;
+  let currentPool = 0;
 
   fetch("/api/info")
     .then(r => r.json())
     .then(info => {
-      const key = { nwc: 'lightning-nwc', lnd: 'lightning-lnd', manual: 'lightning-manual' }[info.lightningMethod] || 'lightning-manual';
+      const keys = { 
+        nwc: 'lightning-nwc', 
+        lnd: 'lightning-lnd', 
+        phoenixd: 'lightning-phoenixd',
+        'breez-liquid': 'lightning-breez-liquid',
+        mdk: 'lightning-mdk',
+        manual: 'lightning-manual' 
+      };
+      const key = keys[info.lightningMethod] || 'lightning-manual';
       document.getElementById("lightning-status").textContent = t(key);
+      currentEntryFee = info.entryFee || 0;
     })
     .catch(() => {});
 
@@ -232,6 +254,12 @@
     document.getElementById("player-count").textContent = "0";
     document.getElementById("btn-start-quiz").disabled = true;
     document.getElementById("lobby-hint").textContent = t('need-one-player');
+    
+    if (currentEntryFee > 0) {
+      document.getElementById("lobby-pool-card").style.display = "block";
+      document.getElementById("lobby-pool-amount").textContent = "0 sats";
+    }
+
     showScreen("screen-lobby");
   });
 
@@ -245,10 +273,15 @@
     document.getElementById("lobby-hint").textContent = count === 0
       ? t('need-one-player')
       : t(count === 1 ? 'players-ready' : 'players-ready-plural', count);
+    
+    if (currentEntryFee > 0) {
+      currentPool = count * currentEntryFee;
+      document.getElementById("lobby-pool-amount").textContent = `${fmt(currentPool)} sats`;
+    }
   });
 
   socket.on("quiz_started", () => {
-    setTimeout(() => socket.emit("start_question"), 1000);
+    // No action needed, server will push question_started
   });
 
   socket.on("quiz_error", ({ message }) => {
@@ -301,11 +334,17 @@
     const winner = leaderboard[0];
     document.getElementById("final-winner-name").textContent =
       winner ? "🥇 " + winner.nickname : t('no-players');
-    document.getElementById("final-winner-sats").textContent =
-      winner ? `${fmt(winner.score)} ${t('points')}` : "";
+    
+    const displayScore = winner ? fmt(winner.score) : "0";
+    document.getElementById("final-winner-sats").textContent = `${displayScore} ${t('points')}`;
 
     if (rewardInfo) {
-      if (rewardInfo.success && rewardInfo.paymentRequest) {
+      if (rewardInfo.paidMode) {
+        document.getElementById("final-winner-sats").textContent = `🏆 ${fmt(rewardInfo.satAmount)} sats`;
+        document.getElementById("payout-status-section").style.display = "block";
+        document.getElementById("payout-status-msg").textContent = t('waiting-players'); // Use as placeholder for "Waiting for winner..."
+        document.getElementById("payout-status-msg").style.color = "var(--muted)";
+      } else if (rewardInfo.success && rewardInfo.paymentRequest) {
         document.getElementById("lightning-invoice-section").style.display = "block";
         document.getElementById("invoice-text").textContent = rewardInfo.paymentRequest;
         document.getElementById("invoice-qr-img").src =
@@ -324,6 +363,16 @@
 
     document.getElementById("final-leaderboard").innerHTML = buildLeaderboard(leaderboard);
     showScreen("screen-final");
+  });
+
+  socket.on("payout_confirmed", ({ preimage, winnerNickname }) => {
+    document.getElementById("payout-status-section").style.display = "block";
+    document.getElementById("payout-status-msg").textContent = "✅ " + t('payout-success', winnerNickname);
+    document.getElementById("payout-status-msg").style.color = "var(--accent)";
+  });
+
+  socket.on("payout_error", ({ message }) => {
+    alert("Error en el pago: " + message);
   });
 
 })();
