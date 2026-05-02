@@ -140,12 +140,15 @@ const PhoenixdManager = {
       if (data.status === "failed") {
         throw new Error(data.reason || "Payment failed");
       }
+      const feeSat = data.routingFeeSat ?? data.routingFee ?? data.feeSat;
+      const feeMsat = data.fees ?? (Number.isFinite(Number(feeSat)) ? Number(feeSat) * 1000 : undefined);
       return {
         success: true,
         preimage: data.preimage || data.paymentPreimage,
         paymentHash: data.paymentHash,
         sentSat: data.sent,
-        feeMsat: data.fees,
+        feeSat: Number.isFinite(Number(feeSat)) ? Number(feeSat) : undefined,
+        feeMsat: Number.isFinite(Number(feeMsat)) ? Number(feeMsat) : undefined,
         raw: data
       };
     } catch (err) {
