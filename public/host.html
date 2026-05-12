@@ -14,11 +14,41 @@
       padding-bottom: 28px;
     }
     .answered-count { font-size: .9rem; color: var(--muted); text-align: center; margin-top: 6px; }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed; top:0; left:0; width:100%; height:100%;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center; z-index: 2000;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--card-bg); border: 2px solid var(--accent);
+      border-radius: var(--radius); padding: 28px; width: 100%; max-width: 420px;
+      box-shadow: 0 0 30px rgba(57,255,20,0.25); text-align: center;
+      position: relative; animation: modalIn 0.3s ease-out;
+    }
+    @keyframes modalIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-title { font-size: 1.5rem; font-weight: 900; margin-bottom: 12px; color: var(--accent); }
+    .modal-body { color: var(--text); line-height: 1.5; margin-bottom: 24px; white-space: pre-line; }
   </style>
 </head>
 <body>
 
 <button class="btn-lang">EN</button>
+
+<!-- Custom Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-title" id="modal-title">¡Notificación!</div>
+    <div class="modal-body" id="modal-body">Mensaje aquí...</div>
+    <button class="btn btn-primary" id="modal-close">OK</button>
+  </div>
+</div>
 
 <!-- ════════════════════════════════════════════════════════ INICIO ══ -->
 <div class="screen active" id="screen-setup">
@@ -285,7 +315,7 @@
   });
 
   socket.on("quiz_error", ({ message }) => {
-    alert(message);
+    showModal(t('quiz-error-title'), message);
     document.getElementById("btn-start-quiz").disabled = false;
   });
 
@@ -340,8 +370,10 @@
 
     if (rewardInfo) {
       if (rewardInfo.paidMode) {
+        const pool = rewardInfo.poolAmount || rewardInfo.satAmount;
+        const payout = rewardInfo.payoutAmount || pool;
         document.getElementById("final-winner-sats").textContent =
-          `🏆 ${fmt(rewardInfo.poolAmount || rewardInfo.satAmount)} sats pool → ${fmt(rewardInfo.payoutAmount || rewardInfo.satAmount)} sats payout`;
+          `🏆 ${fmt(pool)} sats pozo → ${fmt(payout)} sats premio`;
         document.getElementById("payout-status-section").style.display = "block";
         document.getElementById("payout-status-msg").textContent = t('waiting-players'); // Use as placeholder for "Waiting for winner..."
         document.getElementById("payout-status-msg").style.color = "var(--muted)";
@@ -376,7 +408,7 @@
   });
 
   socket.on("payout_error", ({ message }) => {
-    alert("Error en el pago: " + message);
+    showModal(t('payout-error-title'), message);
   });
 
 })();
