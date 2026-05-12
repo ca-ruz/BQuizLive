@@ -41,11 +41,41 @@
       box-shadow: 0 0 18px rgba(57,255,20,.35);
       color: var(--accent);
     }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed; top:0; left:0; width:100%; height:100%;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center; z-index: 2000;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--card-bg); border: 2px solid var(--accent);
+      border-radius: var(--radius); padding: 28px; width: 100%; max-width: 420px;
+      box-shadow: 0 0 30px rgba(57,255,20,0.25); text-align: center;
+      position: relative; animation: modalIn 0.3s ease-out;
+    }
+    @keyframes modalIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-title { font-size: 1.5rem; font-weight: 900; margin-bottom: 12px; color: var(--accent); }
+    .modal-body { color: var(--text); line-height: 1.5; margin-bottom: 24px; white-space: pre-line; }
   </style>
 </head>
 <body>
 
 <button class="btn-lang">EN</button>
+
+<!-- Custom Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-title" id="modal-title">¡Notificación!</div>
+    <div class="modal-body" id="modal-body">Mensaje aquí...</div>
+    <button class="btn btn-primary" id="modal-close">OK</button>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════════════════════════ UNIRSE ══ -->
 <div class="screen active" id="screen-join">
@@ -248,7 +278,12 @@
     socket.emit("join_room", { roomCode, nickname, playerId });
   }
 
-  socket.on("payment_required", ({ paymentRequest, amount }) => {
+  socket.on("payment_required", ({ paymentRequest, amount, playerId }) => {
+    myPlayerId = playerId;
+    const roomCode = document.getElementById("inp-room").value.trim().toUpperCase();
+    const nickname = document.getElementById("inp-nickname").value.trim();
+    saveSession({ roomCode, nickname, playerId });
+
     document.getElementById("payment-qr").src = `/api/qr?url=${encodeURIComponent(paymentRequest)}`;
     document.getElementById("payment-amount").textContent = `${fmt(amount)} sats`;
     document.getElementById("payment-request").value = paymentRequest;
@@ -295,6 +330,7 @@
   });
 
   socket.on("join_error", ({ message }) => {
+    quizEnded = false;
     if (savedSession) {
       localStorage.removeItem("bquiz-player-session");
       savedSession = null;
@@ -482,8 +518,11 @@
   socket.on("payout_confirmed", ({ preimage, winnerNickname, payoutSummary }) => {
     document.getElementById("payout-loading").style.display = "none";
     const summaryText = formatPayoutSummary(payoutSummary);
-    alert(t('payout-success', winnerNickname) + (summaryText ? "\n\n" + summaryText : ""));
-    location.reload();
+    showModal(
+      t('payout-success-title'),
+      t('payout-success', winnerNickname) + (summaryText ? "\n\n" + summaryText : ""),
+      () => location.reload()
+    );
   });
 
   socket.on("payout_error", ({ message }) => {
@@ -493,7 +532,7 @@
   });
 
   socket.on("host_disconnected", () => {
-    alert(t('host-disconnected'));
+    showModal("Error", t('host-disconnected'));
   });
 
   socket.on("quiz_restarted", () => {
@@ -509,3 +548,4 @@
 </script>
 </body>
 </html>
+/html>
