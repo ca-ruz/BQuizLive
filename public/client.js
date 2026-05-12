@@ -11,6 +11,29 @@ function showScreen(id) {
 }
 
 /**
+ * Show a custom modal instead of browser alert.
+ */
+function showModal(title, body, onClose) {
+  const overlay = document.getElementById("modal-overlay");
+  const titleEl = document.getElementById("modal-title");
+  const bodyEl = document.getElementById("modal-body");
+  const closeBtn = document.getElementById("modal-close");
+
+  if (!overlay || !titleEl || !bodyEl) return;
+
+  titleEl.textContent = title;
+  bodyEl.textContent = body;
+  overlay.classList.add("active");
+
+  const close = () => {
+    overlay.classList.remove("active");
+    closeBtn.removeEventListener("click", close);
+    if (onClose) onClose();
+  };
+  closeBtn.addEventListener("click", close);
+}
+
+/**
  * Format a number with thousands separator.
  */
 function fmt(n) {
@@ -43,6 +66,9 @@ function formatPayoutSummary(summary) {
   }
   if (Number.isFinite(Number(summary.reserveLeftSat))) {
     lines.push(t('payout-reserve-left', fmt(summary.reserveLeftSat)));
+  }
+  if (Number.isFinite(Number(summary.nodeBalanceSat))) {
+    lines.push(t('payout-node-balance', fmt(summary.nodeBalanceSat)));
   }
   return lines.join("\n");
 }
