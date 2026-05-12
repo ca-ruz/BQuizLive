@@ -33,6 +33,9 @@ const i18n = {
     'payout-dest-label':     'Factura Lightning',
     'btn-claim':             'Cobrar Premio',
     'payout-processing':     'Procesando pago…',
+    'payout-success-title':  '¡Premio Enviado!',
+    'payout-error-title':    'Error de Pago',
+    'quiz-error-title':      'Error del Quiz',
     'thanks':                '¡Gracias por participar!',
     'tip':                   'Tip: ¡corre tu propio nodo Bitcoin y únete a la Red Lightning!',
 
@@ -129,6 +132,9 @@ const i18n = {
     'payout-dest-label':     'Lightning Invoice',
     'btn-claim':             'Claim Prize',
     'payout-processing':     'Processing payment…',
+    'payout-success-title':  'Prize Sent!',
+    'payout-error-title':    'Payout Error',
+    'quiz-error-title':      'Quiz Error',
     'thanks':                'Thanks for playing!',
     'tip':                   'Tip: run your own Bitcoin node and join the Lightning Network!',
 
@@ -153,6 +159,7 @@ const i18n = {
     'payout-fee':            'Network fee: ~{0} sats ({1} msats)',
     'payout-total':          'Total sent: {0} sats',
     'payout-reserve-left':   'Reserve left: {0} sats',
+    'payout-node-balance':   'Final node balance: {0} sats',
     'host-disconnected':     'The host disconnected. The quiz might resume shortly.',
 
     // ── Host — static labels ──────────────────────────────────────────────────
@@ -221,4 +228,6 @@ function initLang() {
   document.querySelectorAll('.btn-lang').forEach(btn => {
     btn.addEventListener('click', () => applyLang(currentLang === 'es' ? 'en' : 'es'));
   });
+}
+;
 }
