@@ -59,7 +59,7 @@ const PhoenixdManager = {
 
   /** Verifies connectivity and retrieves NodeId */
   async checkStatus() {
-    const url = process.env.PHOENIXD_URL || "http://localhost:9740";
+    const url = process.env.PHOENIXD_URL || "http://127.0.0.1:9740";
     try {
       const res = await fetch(`${url}/getinfo`, {
         headers: { Authorization: this.authHeader }
@@ -76,7 +76,7 @@ const PhoenixdManager = {
 
   /** Creates a BOLT11 invoice via /createinvoice */
   async createInvoice(satAmount, memo) {
-    const url = process.env.PHOENIXD_URL || "http://localhost:9740";
+    const url = process.env.PHOENIXD_URL || "http://127.0.0.1:9740";
     try {
       const params = new URLSearchParams();
       params.append("amountSat", satAmount);
@@ -107,7 +107,7 @@ const PhoenixdManager = {
 
   /** Checks if an incoming payment hash is settled via /payments/incoming/{hash} */
   async isPaid(paymentHash) {
-    const url = process.env.PHOENIXD_URL || "http://localhost:9740";
+    const url = process.env.PHOENIXD_URL || "http://127.0.0.1:9740";
     try {
       const res = await fetch(`${url}/payments/incoming/${paymentHash}`, {
         headers: { Authorization: this.authHeader }
@@ -122,7 +122,7 @@ const PhoenixdManager = {
 
   /** Pays a BOLT11/BOLT12 invoice via /payinvoice */
   async payWinner(invoice) {
-    const url = process.env.PHOENIXD_URL || "http://localhost:9740";
+    const url = process.env.PHOENIXD_URL || "http://127.0.0.1:9740";
     try {
       const params = new URLSearchParams();
       params.append("invoice", invoice);
@@ -140,15 +140,19 @@ const PhoenixdManager = {
       if (data.status === "failed") {
         throw new Error(data.reason || "Payment failed");
       }
-      const feeSat = data.routingFeeSat ?? data.routingFee ?? data.feeSat;
-      const feeMsat = data.fees ?? (Number.isFinite(Number(feeSat)) ? Number(feeSat) * 1000 : undefined);
+      
+      const info = await this.checkStatus();
+      const prizeSat = data.amountSat || data.recipientAmountSat || 0;
+      const feeSat = data.feeSat || data.routingFeeSat || 0;
+      
       return {
         success: true,
         preimage: data.preimage || data.paymentPreimage,
         paymentHash: data.paymentHash,
-        sentSat: data.sent,
-        feeSat: Number.isFinite(Number(feeSat)) ? Number(feeSat) : undefined,
-        feeMsat: Number.isFinite(Number(feeMsat)) ? Number(feeMsat) : undefined,
+        prizeSat: Number(prizeSat),
+        feeSat: Number(feeSat),
+        sentSat: Number(prizeSat) + Number(feeSat),
+        finalBalanceSat: info ? info.balanceSat : undefined,
         raw: data
       };
     } catch (err) {

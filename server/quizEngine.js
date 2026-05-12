@@ -58,9 +58,15 @@ class QuizEngine {
       }
     }
 
-    // Check if nickname is already in pending (Phase 3)
+    // Check if nickname is already in pending
     for (const pending of room.pendingPlayers.values()) {
       if (pending.nickname.toLowerCase() === nicknameLC) {
+        // If the player ID matches or if it's the same nickname (and no ID was provided yet)
+        // allow them to resume their pending session.
+        if (existingPlayerId === pending.id || !existingPlayerId) {
+          pending.socketId = socketId;
+          return { alreadyPending: true, player: pending };
+        }
         return { error: "Ese apodo ya está esperando pago. Intenta de nuevo en un momento." };
       }
     }
@@ -88,9 +94,9 @@ class QuizEngine {
   }
 
   /**
-   * Agrega un jugador a la lista de espera de pago (Phase 3).
+   * Agrega un jugador a la lista de espera de pago.
    */
-  addPendingPlayer(roomCode, nickname, socketId, paymentHash) {
+  addPendingPlayer(roomCode, nickname, socketId, paymentHash, paymentRequest) {
     const room = this.rooms.get(roomCode);
     if (!room) return null;
 
@@ -100,6 +106,7 @@ class QuizEngine {
       nickname,
       socketId,
       paymentHash,
+      paymentRequest,
       score: 0,
       answers: []
     };
