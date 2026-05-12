@@ -75,12 +75,12 @@ describe("Pay-to-Play Pool Logic", () => {
     assert.strictEqual(room.players.size, 2);
   });
 
-  test("rejects join if nickname is already in pending list", () => {
+  test("allows join if nickname is already in pending list (resumes session)", () => {
     const hash = "hash123";
-    quizEngine.addPendingPlayer(code, "Alice", "socket-a", hash);
+    quizEngine.addPendingPlayer(code, "Alice", "socket-a", hash, "lnbc1...");
     
     const result = quizEngine.joinRoom(code, "Alice", "socket-new");
-    assert.ok(result.error);
-    assert.match(result.error, /esperando pago/);
+    assert.strictEqual(result.alreadyPending, true);
+    assert.strictEqual(result.player.nickname, "Alice");
   });
 });

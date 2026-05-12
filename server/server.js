@@ -11,7 +11,6 @@ const path = require("path");
 const QRCode = require("qrcode");
 
 // Auto-detect the machine's local network IP so QR codes work on other devices.
-// Reads .env BASE_URL first; falls back to the first non-internal IPv4 address.
 function getLocalIP() {
   const nets = os.networkInterfaces();
   for (const name of Object.keys(nets)) {
@@ -54,14 +53,12 @@ const io = new Server(server);
 
 const PORT = parseInt(process.env.PORT) || 3000;
 const BASE_URL = process.env.BASE_URL || `http://${getLocalIP()}:${PORT}`;
-const TIME_LIMIT = parseInt(process.env.QUESTION_TIME_LIMIT) || 21; // seconds (default 21)
+const TIME_LIMIT = parseInt(process.env.QUESTION_TIME_LIMIT) || 21;
 const SAT_PER_POINT = parseInt(process.env.SAT_PER_POINT) || 1;
-const ENTRY_FEE_SATS = parseInt(process.env.ENTRY_FEE_SATS) || 0; // Phase 3
-const PAYOUT_FEE_RESERVE_SATS = parseInt(process.env.PAYOUT_FEE_RESERVE_SATS) || 10;
-const RESULTS_DELAY = parseInt(process.env.RESULTS_DELAY) || 8; // seconds to display results before auto-advancing
+const RESULTS_DELAY = parseInt(process.env.RESULTS_DELAY) || 8;
 const QUESTION_COUNT = parseInt(process.env.QUESTION_COUNT) || allQuestions.length;
 
-// Shuffle the answer options for a question and update the correct index to match.
+// Shuffle answer options
 function shuffleOptions(question) {
   const count = question.options.es.length;
   const indices = Array.from({ length: count }, (_, i) => i);
@@ -79,40 +76,28 @@ function shuffleOptions(question) {
   };
 }
 
-// Pick a random subset of questions for each new room (no repeats).
 function pickQuestions() {
   const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, Math.min(QUESTION_COUNT, allQuestions.length)).map(shuffleOptions);
 }
 
-// ─── Static files ────────────────────────────────────────────────────────────
-
 app.use(express.static(path.join(__dirname, "../public")));
 
-// ─── HTTP API ─────────────────────────────────────────────────────────────────
-
-// Info endpoint — lets the client know if Lightning is available
 app.get("/api/info", (_req, res) => {
   res.json({
     lightningConfigured: lightning.isConfigured(),
     lightningMethod: lightning.activeMethod(),
     totalQuestions: QUESTION_COUNT,
     timeLimit: TIME_LIMIT,
-    entryFee: ENTRY_FEE_SATS
+    entryFee: parseInt(process.env.ENTRY_FEE_SATS) || 0
   });
 });
 
-// QR code endpoint — generates a PNG QR code for any URL
 app.get("/api/qr", async (req, res) => {
   const url = String(req.query.url || "").slice(0, 500);
   if (!url) return res.status(400).send("Missing url param");
   try {
-    const png = await QRCode.toBuffer(url, {
-      type: "png",
-      width: 300,
-      margin: 2,
-      color: { dark: "#000000", light: "#ffffff" }
-    });
+    const png = await QRCode.toBuffer(url, { width: 300, margin: 2 });
     res.set("Content-Type", "image/png");
     res.send(png);
   } catch (e) {
@@ -120,10 +105,38 @@ app.get("/api/qr", async (req, res) => {
   }
 });
 
-// ─── Socket.io ────────────────────────────────────────────────────────────────
-
 io.on("connection", (socket) => {
   console.log(`[+] Connected  ${socket.id}`);
+
+  // Helper to check for payment settlement and admit player
+  function startSettlementCheck(targetSocket, roomCode, paymentHash) {
+    const checkInterval = setInterval(async () => {
+      const paid = await lightning.isPaid(paymentHash);
+      if (paid) {
+        clearInterval(checkInterval);
+        const player = quizEngine.confirmPayment(roomCode, paymentHash);
+        if (player) {
+          targetSocket.join(roomCode);
+          targetSocket.emit("join_success", {
+            playerId: player.id,
+            nickname: player.nickname,
+            roomCode,
+            rejoined: false,
+            score: player.score
+          });
+          const room = quizEngine.getRoom(roomCode);
+          if (room) {
+            io.to(room.hostSocketId).emit("player_joined", {
+              players: quizEngine.getPlayers(roomCode).map(p => ({
+                id: p.id, nickname: p.nickname, score: p.score
+              }))
+            });
+          }
+        }
+      }
+    }, 3000);
+    targetSocket.on("disconnect", () => clearInterval(checkInterval));
+  }
 
   // ═══════════════════════════════════════════════════════════════════════════
   //  HOST EVENTS
@@ -131,43 +144,36 @@ io.on("connection", (socket) => {
 
   socket.on("create_room", () => {
     const roomQuestions = pickQuestions();
-    const roomCode = quizEngine.createRoom(socket.id, roomQuestions, ENTRY_FEE_SATS);
+    const entryFee = parseInt(process.env.ENTRY_FEE_SATS) || 0;
+    const roomCode = quizEngine.createRoom(socket.id, roomQuestions, entryFee);
     socket.join(roomCode);
-
-    const joinUrl = `${BASE_URL}/?room=${roomCode}`;
-
     socket.emit("room_created", {
       roomCode,
-      joinUrl,
+      joinUrl: `${BASE_URL}/?room=${roomCode}`,
       totalQuestions: roomQuestions.length,
       timeLimit: TIME_LIMIT
     });
-
     console.log(`[Room] Created ${roomCode}`);
   });
 
   socket.on("start_quiz", () => {
     const room = quizEngine.getRoomByHostSocket(socket.id);
-    if (!room) return;
-    if (room.players.size === 0) {
-      socket.emit("quiz_error", { message: "Aún no se ha unido ningún jugador." });
-      return;
-    }
+    if (!room || room.players.size === 0) return;
     io.to(room.code).emit("quiz_started", { totalQuestions: room.questions.length });
     setTimeout(() => launchQuestion(room.code), 3000);
   });
 
   socket.on("force_end_question", () => {
     const room = quizEngine.getRoomByHostSocket(socket.id);
-    if (!room || room.state !== "question") return;
-    clearTimeout(room.questionTimer);
-    endQuestion(room.code);
+    if (room?.state === "question") {
+      clearTimeout(room.questionTimer);
+      endQuestion(room.code);
+    }
   });
 
   socket.on("end_quiz", () => {
     const room = quizEngine.getRoomByHostSocket(socket.id);
-    if (!room) return;
-    finishQuiz(room.code);
+    if (room) finishQuiz(room.code);
   });
 
   socket.on("restart_quiz", () => {
@@ -177,12 +183,12 @@ io.on("connection", (socket) => {
       quizEngine.removeRoom(room.code);
     }
     const roomQuestions = pickQuestions();
-    const newCode = quizEngine.createRoom(socket.id, roomQuestions, ENTRY_FEE_SATS);
+    const entryFee = parseInt(process.env.ENTRY_FEE_SATS) || 0;
+    const newCode = quizEngine.createRoom(socket.id, roomQuestions, entryFee);
     socket.join(newCode);
-    const joinUrl = `${BASE_URL}/?room=${newCode}`;
     socket.emit("room_created", {
       roomCode: newCode,
-      joinUrl,
+      joinUrl: `${BASE_URL}/?room=${newCode}`,
       totalQuestions: roomQuestions.length,
       timeLimit: TIME_LIMIT
     });
@@ -197,103 +203,48 @@ io.on("connection", (socket) => {
     nickname = String(nickname || "").trim().slice(0, 20);
     playerId = String(playerId || "").trim();
 
-    if (!nickname || !roomCode) {
-      socket.emit("join_error", { message: "Datos de entrada inválidos." });
-      return;
-    }
+    if (!nickname || !roomCode) return socket.emit("join_error", { message: "Datos inválidos." });
 
     const result = quizEngine.joinRoom(roomCode, nickname, socket.id, playerId);
 
-    // If entry fee is required, generate invoice and wait for payment
-    if (result.paymentRequired) {
-      const invoice = await lightning.createInvoice(result.entryFee, `Join Quiz: ${nickname}`);
-      if (invoice.success) {
-        quizEngine.addPendingPlayer(roomCode, nickname, socket.id, invoice.paymentHash);
-        socket.emit("payment_required", {
-          paymentRequest: invoice.paymentRequest,
-          amount: result.entryFee
-        });
-
-        const checkInterval = setInterval(async () => {
-          const paid = await lightning.isPaid(invoice.paymentHash);
-          if (paid) {
-            clearInterval(checkInterval);
-            const player = quizEngine.confirmPayment(roomCode, invoice.paymentHash);
-            if (player) {
-              socket.join(roomCode);
-              socket.emit("join_success", {
-                playerId: player.id,
-                nickname: player.nickname,
-                roomCode,
-                rejoined: false,
-                score: player.score
-              });
-              const room = quizEngine.getRoom(roomCode);
-              if (room) {
-                io.to(room.hostSocketId).emit("player_joined", {
-                  players: quizEngine.getPlayers(roomCode).map(p => ({
-                    id: p.id,
-                    nickname: p.nickname,
-                    score: p.score
-                  }))
-                });
-              }
-            }
-          }
-        }, 3000);
-        socket.on("disconnect", () => clearInterval(checkInterval));
-        return;
-      } else {
-        socket.emit("join_error", { message: "Error al generar factura de entrada." });
-        return;
-      }
-    }
-
-    if (result.error) {
-      socket.emit("join_error", { message: result.error });
+    if (result.alreadyPending) {
+      const p = result.player;
+      socket.emit("payment_required", {
+        paymentRequest: p.paymentRequest,
+        amount: quizEngine.getRoom(roomCode).entryFee,
+        playerId: p.id
+      });
+      startSettlementCheck(socket, roomCode, p.paymentHash);
       return;
     }
 
-    socket.join(roomCode);
+    if (result.paymentRequired) {
+      const invoice = await lightning.createInvoice(result.entryFee, `Join Quiz: ${nickname}`);
+      if (invoice.success) {
+        console.log(`[Payment] Invoice for ${nickname}: ${invoice.paymentHash}`);
+        const p = quizEngine.addPendingPlayer(roomCode, nickname, socket.id, invoice.paymentHash, invoice.paymentRequest);
+        socket.emit("payment_required", {
+          paymentRequest: invoice.paymentRequest,
+          amount: result.entryFee,
+          playerId: p.id
+        });
+        startSettlementCheck(socket, roomCode, invoice.paymentHash);
+        return;
+      }
+      return socket.emit("join_error", { message: "Error al generar factura." });
+    }
 
-    socket.emit("join_success", {
-      playerId: result.playerId,
-      nickname: result.player.nickname,
-      roomCode,
-      rejoined: result.rejoined || false,
-      score: result.player.score
-    });
+    if (result.error) return socket.emit("join_error", { message: result.error });
+
+    socket.join(roomCode);
+    socket.emit("join_success", { playerId: result.playerId, nickname: result.player.nickname, roomCode });
 
     const room = quizEngine.getRoom(roomCode);
-    if (result.rejoined && room) {
-      if (room.state === "question") {
-        const q = room.questions[room.currentQuestionIndex];
-        const elapsed = (Date.now() - room.questionStartTime) / 1000;
-        const remaining = Math.max(1, Math.ceil(TIME_LIMIT - elapsed));
-        socket.emit("question_started", {
-          index: room.currentQuestionIndex,
-          total: room.questions.length,
-          text: q.text,
-          options: q.options,
-          timeLimit: remaining,
-          alreadyAnswered: room.currentAnswers.has(result.playerId)
-        });
-      } else if (room.state === "finished") {
-        const leaderboard = quizEngine.getLeaderboard(roomCode);
-        const winner = leaderboard[0];
-        socket.emit("quiz_ended", { leaderboard, winnerNickname: winner?.nickname });
-      }
-    }
     if (room) {
       io.to(room.hostSocketId).emit("player_joined", {
-        players: quizEngine.getPlayers(roomCode).map(p => ({
-          id: p.id,
-          nickname: p.nickname,
-          score: p.score
-        }))
+        players: quizEngine.getPlayers(roomCode).map(p => ({ id: p.id, nickname: p.nickname, score: p.score }))
       });
     }
-    console.log(`[Room] ${roomCode} ← ${nickname} ${result.rejoined ? "(rejoin)" : "joined"}`);
   });
 
   socket.on("submit_answer", ({ answerIndex }) => {
@@ -301,22 +252,18 @@ io.on("connection", (socket) => {
     if (!found) return;
     const { room, player } = found;
     const question = room.questions[room.currentQuestionIndex];
-    if (typeof answerIndex !== "number" || answerIndex < 0 || answerIndex >= question.options.es.length) {
-      socket.emit("answer_error", { message: "Respuesta inválida." });
-      return;
-    }
+    if (typeof answerIndex !== "number" || answerIndex < 0) return;
+
     const result = quizEngine.submitAnswer(room.code, player.id, answerIndex);
-    if (result.error) {
-      socket.emit("answer_error", { message: result.error });
-      return;
-    }
+    if (result.error) return;
+
     socket.emit("answer_received");
-    const stats = quizEngine.getAnswerStats(room.code, room.questions[room.currentQuestionIndex].options.es.length);
     io.to(room.hostSocketId).emit("answer_stats", {
-      stats,
+      stats: quizEngine.getAnswerStats(room.code, question.options.es.length),
       answeredCount: room.currentAnswers.size,
       totalPlayers: room.players.size
     });
+
     if (answerIndex === question.correct || quizEngine.allPlayersAnswered(room.code)) {
       if (!room.endTimer) {
         clearTimeout(room.questionTimer);
@@ -328,7 +275,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Phase 4: Winner Payout Request
   socket.on("process_payout", async ({ invoice }) => {
     const found = quizEngine.getRoomByPlayerSocket(socket.id);
     if (!found) return;
@@ -336,40 +282,28 @@ io.on("connection", (socket) => {
     const leaderboard = quizEngine.getLeaderboard(room.code);
     const winner = leaderboard[0];
 
-    if (player.id !== winner.id) {
-      socket.emit("payout_error", { message: "Solo el ganador puede solicitar el premio." });
-      return;
-    }
+    if (player.id !== winner?.id) return socket.emit("payout_error", { message: "Solo el ganador." });
 
-    console.log(`[Payout] Processing for ${player.nickname} in ${room.code}...`);
+    console.log(`[Payout] Processing for ${player.nickname}...`);
     const payoutResult = await lightning.payWinner(invoice);
     if (payoutResult.success) {
-      const payout = getPayoutAmounts(room.poolAmount);
-      const feeSat = Number.isFinite(Number(payoutResult.feeSat))
-        ? Number(payoutResult.feeSat)
-        : (Number.isFinite(Number(payoutResult.feeMsat)) ? Number(payoutResult.feeMsat) / 1000 : null);
-      const sentSat = Number.isFinite(Number(payoutResult.sentSat))
-        ? Number(payoutResult.sentSat)
-        : (feeSat !== null ? payout.payoutAmount + feeSat : null);
-      const reserveLeftSat = sentSat !== null ? Math.max(0, payout.poolAmount - sentSat) : null;
+      const pool = room.poolAmount;
+      const prize = payoutResult.prizeSat || 0;
+      const fee = payoutResult.feeSat || 0;
+      const sent = prize + fee;
       const payoutSummary = {
-        poolSat: payout.poolAmount,
-        payoutSat: payout.payoutAmount,
-        reserveSat: payout.feeReserveSat,
-        sentSat,
-        feeSat,
-        feeMsat: payoutResult.feeMsat,
-        reserveLeftSat
+        poolSat: pool, payoutSat: prize, feeSat: fee, sentSat: sent,
+        reserveLeftSat: Math.max(0, pool - sent),
+        nodeBalanceSat: payoutResult.finalBalanceSat
       };
       io.to(room.code).emit("payout_confirmed", { 
         preimage: payoutResult.preimage,
         winnerNickname: player.nickname,
         payoutSummary
       });
-      console.log(`[Payout] SUCCESS for ${player.nickname}`, payoutSummary);
+      console.log(`[Payout] SUCCESS`, payoutSummary);
     } else {
       socket.emit("payout_error", { message: payoutResult.error });
-      console.log(`[Payout] FAILED: ${payoutResult.error}`);
     }
   });
 
@@ -385,13 +319,12 @@ function launchQuestion(roomCode) {
   const room = quizEngine.getRoom(roomCode);
   if (!room || room.state === "finished") return;
   const nextIndex = room.currentQuestionIndex + 1;
-  if (nextIndex >= room.questions.length) {
-    finishQuiz(roomCode);
-    return;
-  }
+  if (nextIndex >= room.questions.length) return finishQuiz(roomCode);
+
   const question = room.questions[nextIndex];
   quizEngine.startQuestion(roomCode, nextIndex);
   const payload = { index: nextIndex, total: room.questions.length, text: question.text, options: question.options, timeLimit: TIME_LIMIT };
+  
   io.to(roomCode).emit("question_started", payload);
   const hostSocket = io.sockets.sockets.get(room.hostSocketId);
   if (hostSocket) hostSocket.emit("question_started", { ...payload, correct: question.correct, explanation: question.explanation, totalPlayers: room.players.size });
@@ -400,7 +333,7 @@ function launchQuestion(roomCode) {
 
 function endQuestion(roomCode) {
   const room = quizEngine.getRoom(roomCode);
-  if (!room || room.state !== "question") return;
+  if (room?.state !== "question") return;
   const question = room.questions[room.currentQuestionIndex];
   const results = quizEngine.scoreQuestion(roomCode, question, TIME_LIMIT);
   const leaderboard = quizEngine.getLeaderboard(roomCode);
@@ -423,15 +356,6 @@ function endQuestion(roomCode) {
   else setTimeout(() => launchQuestion(roomCode), RESULTS_DELAY * 1000);
 }
 
-function getPayoutAmounts(poolAmount) {
-  const feeReserveSat = Math.min(PAYOUT_FEE_RESERVE_SATS, Math.max(0, poolAmount - 1));
-  return {
-    poolAmount,
-    feeReserveSat,
-    payoutAmount: Math.max(1, poolAmount - feeReserveSat)
-  };
-}
-
 async function finishQuiz(roomCode) {
   const room = quizEngine.getRoom(roomCode);
   if (!room || room.state === "finished") return;
@@ -441,36 +365,25 @@ async function finishQuiz(roomCode) {
 
   let rewardInfo = null;
   if (winner) {
-    // Phase 4: Use poolAmount if paid quiz
-    const satAmount = room.entryFee > 0 
-      ? room.poolAmount 
-      : Math.max(1, Math.floor(winner.score * SAT_PER_POINT));
-    
+    const satAmount = room.entryFee > 0 ? room.poolAmount : Math.max(1, Math.floor(winner.score * SAT_PER_POINT));
     if (room.entryFee > 0) {
-      const payout = getPayoutAmounts(room.poolAmount);
-      // For paid quiz, we wait for winner to provide invoice
+      const reserve = parseInt(process.env.PAYOUT_FEE_RESERVE_SATS) || 10;
+      const feeReserveSat = Math.min(reserve, Math.max(0, room.poolAmount - 1));
       rewardInfo = { 
-        paidMode: true, 
-        satAmount,
-        poolAmount: payout.poolAmount,
-        payoutAmount: payout.payoutAmount,
-        feeReserveSat: payout.feeReserveSat,
-        winnerNickname: winner.nickname 
+        paidMode: true, satAmount, poolAmount: room.poolAmount, 
+        payoutAmount: Math.max(1, room.poolAmount - feeReserveSat),
+        feeReserveSat, winnerNickname: winner.nickname 
       };
     } else {
-      // Legacy behavior: create invoice for host to pay (or auto-pay if NWC/LND)
-      const memo = `Bitcoin Quiz Winner: ${winner.nickname} (${winner.score} pts)`;
+      const memo = `Winner: ${winner.nickname} (${winner.score} pts)`;
       rewardInfo = await lightning.createInvoice(satAmount, memo);
-      rewardInfo.satAmount = satAmount;
-      rewardInfo.winnerNickname = winner.nickname;
-      rewardInfo.winnerScore = winner.score;
+      Object.assign(rewardInfo, { satAmount, winnerNickname: winner.nickname, winnerScore: winner.score });
     }
   }
 
   const hostSocket = io.sockets.sockets.get(room.hostSocketId);
   if (hostSocket) hostSocket.emit("quiz_ended", { leaderboard, rewardInfo });
   io.to(roomCode).emit("quiz_ended", { leaderboard, winnerNickname: winner?.nickname, rewardInfo });
-
   console.log(`[Room] ${roomCode} finished. Pool: ${room.poolAmount} sats`);
 }
 
@@ -478,10 +391,5 @@ async function finishQuiz(roomCode) {
 
 server.listen(PORT, async () => {
   await lightning.init();
-  console.log(`\nBitcoin Quiz Live`);
-  console.log(`  Host:      ${BASE_URL}/host.html`);
-  console.log(`  Players:   ${BASE_URL}/`);
-  console.log(`  Lightning: ${lightning.isConfigured() ? lightning.activeMethod().toUpperCase() : "not configured"}`);
-  console.log(`  Entry Fee: ${ENTRY_FEE_SATS} sats`);
-  console.log(`  Questions: ${QUESTION_COUNT} of ${allQuestions.length} (random)\n`);
+  console.log(`\nBitcoin Quiz Live\n  Host: ${BASE_URL}/host.html\n  Players: ${BASE_URL}/\n  Lightning: ${lightning.isConfigured() ? lightning.activeMethod().toUpperCase() : "not configured"}\n  Questions: ${QUESTION_COUNT}\n`);
 });
