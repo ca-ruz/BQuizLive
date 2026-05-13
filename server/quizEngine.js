@@ -40,7 +40,7 @@ class QuizEngine {
    */
   joinRoom(roomCode, nickname, socketId, existingPlayerId = null) {
     const room = this.rooms.get(roomCode);
-    if (!room) return { error: "Sala no encontrada. Verifica tu código." };
+    if (!room) return { error: "Room not found. Check your code." };
 
     // Normalize nickname for duplicate checking
     const nicknameLC = nickname.toLowerCase();
@@ -53,7 +53,7 @@ class QuizEngine {
           player.socketId = socketId;
           return { playerId, player, rejoined: true };
         } else {
-          return { error: "Ese apodo ya está en uso. Elige otro." };
+          return { error: "That nickname is already taken. Choose another one." };
         }
       }
     }
@@ -67,13 +67,13 @@ class QuizEngine {
           pending.socketId = socketId;
           return { alreadyPending: true, player: pending };
         }
-        return { error: "Ese apodo ya está esperando pago. Intenta de nuevo en un momento." };
+        return { error: "That nickname is already waiting for payment. Try again in a moment." };
       }
     }
 
     // Reject new joins once the game has started
     if (room.state !== "lobby") {
-      return { error: "El juego ya está en curso." };
+      return { error: "The game is already in progress." };
     }
 
     // If entry fee is required, don't add to players yet (server.js will handle pending)
@@ -94,7 +94,7 @@ class QuizEngine {
   }
 
   /**
-   * Agrega un jugador a la lista de espera de pago.
+   * Adds a player to the payment waiting list.
    */
   addPendingPlayer(roomCode, nickname, socketId, paymentHash, paymentRequest) {
     const room = this.rooms.get(roomCode);
@@ -115,7 +115,7 @@ class QuizEngine {
   }
 
   /**
-   * Confirma el pago y mueve al jugador de pendiente a activo (Phase 3).
+   * Confirms the payment and moves the player from pending to active.
    */
   confirmPayment(roomCode, paymentHash) {
     const room = this.rooms.get(roomCode);
@@ -174,8 +174,8 @@ class QuizEngine {
 
   submitAnswer(roomCode, playerId, answerIndex) {
     const room = this.rooms.get(roomCode);
-    if (!room || room.state !== "question") return { error: "No hay pregunta activa." };
-    if (room.currentAnswers.has(playerId)) return { error: "Ya respondiste esta pregunta." };
+    if (!room || room.state !== "question") return { error: "No active question." };
+    if (room.currentAnswers.has(playerId)) return { error: "You already answered this question." };
 
     room.currentAnswers.set(playerId, {
       answerIndex,
@@ -286,4 +286,5 @@ class QuizEngine {
   }
 }
 
+// Export a singleton — the whole server shares one engine instance
 module.exports = new QuizEngine();
