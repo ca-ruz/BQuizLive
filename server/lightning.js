@@ -1,18 +1,18 @@
-// lightning.js — Integración con motores Lightning (Phoenixd, Breez Liquid, MDK, Legacy)
+// lightning.js — Lightning Network engines integration (Phoenixd, Breez Liquid, MDK, Legacy)
 
 const https = require("https");
 // No node-fetch needed in Node 18+ (using global fetch)
 
-// ─── Motores Lightning ────────────────────────────────────────────────────────
+// ─── Lightning Engines ───────────────────────────────────────────────────────
 
 /**
- * Retorna el método activo. Si LN_ENGINE es 'none', busca configuración legado.
+ * Returns the active method. If LN_ENGINE is 'none', it looks for legacy config.
  */
 function activeMethod() {
   const engine = (process.env.LN_ENGINE || "none").toLowerCase();
   if (engine !== "none") return engine;
 
-  // Fallback legado (Manual Mode)
+  // Legacy fallback (Manual Mode)
   if (process.env.NWC_URL && process.env.NWC_URL.startsWith("nostr+walletconnect://")) {
     return "nwc";
   }
@@ -28,22 +28,22 @@ function isConfigured() {
 }
 
 /**
- * Inicializa el motor seleccionado al arrancar el servidor.
+ * Initializes the selected engine on server startup.
  */
 async function init() {
   const method = activeMethod();
-  console.log(`[Lightning] Inicializando motor: ${method.toUpperCase()}`);
+  console.log(`[Lightning] Initializing engine: ${method.toUpperCase()}`);
 
   if (method === "phoenixd") {
     return await PhoenixdManager.checkStatus();
   }
   if (method === "breez-liquid") {
     // Phase 6
-    console.log("[Lightning] Breez Liquid seleccionado (Próximamente)");
+    console.log("[Lightning] Breez Liquid selected (Coming soon)");
   }
   if (method === "mdk") {
     // Phase 7
-    console.log("[Lightning] Money Dev Kit seleccionado (Próximamente)");
+    console.log("[Lightning] Money Dev Kit selected (Coming soon)");
   }
 }
 
@@ -66,11 +66,11 @@ const PhoenixdManager = {
       });
       if (!res.ok) throw new Error(`Phoenixd error: ${res.status}`);
       const data = await res.json();
-      console.log(`[Lightning] Phoenixd conectado. NodeId: ${data.nodeId}`);
-      return true;
+      console.log(`[Lightning] Phoenixd connected. NodeId: ${data.nodeId}`);
+      return data;
     } catch (err) {
-      console.error("[Lightning] Error al conectar con Phoenixd:", err.message);
-      return false;
+      console.error("[Lightning] Error connecting to Phoenixd:", err.message);
+      return null;
     }
   },
 
@@ -162,7 +162,7 @@ const PhoenixdManager = {
   }
 };
 
-// ─── Función principal ────────────────────────────────────────────────────────
+// ─── Main Functions ──────────────────────────────────────────────────────────
 
 async function createInvoice(satAmount, memo) {
   const method = activeMethod();
@@ -175,23 +175,22 @@ async function createInvoice(satAmount, memo) {
 }
 
 /**
- * Verifica si un pago ha sido recibido.
+ * Verifies if a payment has been received.
  */
 async function isPaid(paymentHash) {
   const method = activeMethod();
   if (method === "phoenixd") return PhoenixdManager.isPaid(paymentHash);
-  // NWC/LND legacy no soportan isPaid fácilmente sin más lógica,
-  // pero para Pay-to-Play solo usaremos los nuevos motores.
+  // NWC/LND legacy don't support isPaid easily without extra logic.
   return false;
 }
 
 /**
- * Paga al ganador (usado en modo Pay-to-Play).
+ * Pays the winner (used in Pay-to-Play mode).
  */
 async function payWinner(invoice) {
   const method = activeMethod();
   if (method === "phoenixd") return PhoenixdManager.payWinner(invoice);
-  return { success: false, error: "Motor no soporta pagos automáticos o no configurado" };
+  return { success: false, error: "Engine does not support automated payouts or not configured" };
 }
 
 // ─── Legacy Providers (NWC / LND) ─────────────────────────────────────────────
@@ -204,7 +203,7 @@ async function createInvoiceViaNWC(satAmount, memo) {
     await client.close();
     return { success: true, paymentRequest: response.invoice, satAmount, memo };
   } catch (err) {
-    console.error("Error NWC al crear factura:", err.message);
+    console.error("NWC error creating invoice:", err.message);
     return { manual: true, satAmount, memo, error: err.message };
   }
 }
@@ -225,7 +224,7 @@ async function createInvoiceViaLND(satAmount, memo) {
     const data = await response.json();
     return { success: true, paymentRequest: data.payment_request, satAmount, memo };
   } catch (err) {
-    console.error("Error LND al crear factura:", err.message);
+    console.error("LND error creating invoice:", err.message);
     return { manual: true, satAmount, memo, error: err.message };
   }
 }
