@@ -1,27 +1,25 @@
 # Bitcoin Quiz Live
 
-Quiz multijugador estilo Kahoot para meetups de Bitcoin.
-Los participantes se unen desde su teléfono, compiten en tiempo real y
-el ganador recibe sats a través de Lightning Network.
+Multiplayer Kahoot-style quiz for Bitcoin meetups. Participants join via mobile, compete in real-time, and the winner receives sats via the Lightning Network.
 
 ---
 
-## Características
+## Features
 
-- **Modo Pay-to-Play**: Los jugadores pagan una entrada (sats) para fondear un pozo de premios.
-- **Pagos Automáticos**: El ganador reclama su premio al final ingresando su dirección Lightning.
-- **Soporte Multi-Motor**: Phoenixd, Breez SDK (Liquid), MDK (Cloud), NWC, LND o modo manual.
-- Panel del presentador con marcador en vivo y flujo automático.
-- Participantes se unen desde su celular con código o QR.
-- ~100 preguntas en 9 categorías (bilingües ES/EN).
-- Temporizador con puntuación por velocidad (50–100 pts).
-- UI mobile-first con tema Synthwave/Neon.
+- **Pay-to-Play Mode**: Players pay an entry fee (sats) to fund a prize pool.
+- **Automated Payouts**: The winner claims their prize at the end by entering their Lightning Address.
+- **Multi-Engine Support**: Phoenixd or manual mode. Coming soon: Breez SDK (Liquid), MDK (Cloud), NWC, LND.
+- Presenter dashboard with live leaderboard and automated game flow.
+- Participants join via mobile using a room code or QR.
+- ~100 questions across 9 categories (bilingual ES/EN).
+- Timer with speed-based scoring (50–100 pts).
+- Mobile-first UI with a Synthwave/Neon theme.
 
 ---
 
-## Inicio rápido
+## Quick Start
 
-### 1. Clonar e Instalar dependencias
+### 1. Clone and Install dependencies
 
 ```bash
 git clone https://github.com/ca-ruz/bitcoin-quiz-live
@@ -29,17 +27,17 @@ cd bitcoin-quiz-live
 npm install
 ```
 
-### 2. Configurar entorno
+### 2. Configure environment
 
 ```bash
 cp .env.example .env
-# edita .env según necesites
+# edit .env as needed
 ```
 
-- **Modo Manual**: Deja `ENTRY_FEE_SATS=0`. Gratis para jugadores, pago manual del host.
-- **Modo Pool**: Configura `ENTRY_FEE_SATS` (ej: 2100) y elige un `LN_ENGINE` (ej: phoenixd).
+- **Manual Mode**: Leave `ENTRY_FEE_SATS=0`. Free for players, manual payout by host.
+- **Pool Mode**: Configure `ENTRY_FEE_SATS` (e.g., 2100) and select an `LN_ENGINE` (e.g., phoenixd).
 
-### 3. Correr el servidor
+### 3. Run the server
 
 ```bash
 npm run dev
@@ -47,51 +45,37 @@ npm run dev
 
 ---
 
-## Modos de Juego y Recompensa
+## Game Modes & Rewards
 
-| Modo | Entrada | Recompensa (Premio) | Pago |
-|------|---------|---------------------|------|
-| **Manual** | Gratis | `puntos_ganador × SAT_PER_POINT` | Manual (Host) |
-| **Phoenixd** | Sats | Suma de todas las entradas (Pozo) | Automático |
-| **Breez Liquid**| Sats | Suma de todas las entradas (Pozo) | Automático |
-| **MDK (Cloud)** | Sats | Suma de todas las entradas (Pozo) | Automático |
+| Mode | Entry Fee | Reward (Prize) | Payout |
+|------|-----------|----------------|--------|
+| **Manual** | Free | `winner_points × SAT_PER_POINT` | Manual (Host) |
+| **Phoenixd** | Sats | Sum of all entries (Pool) | Automated |
 
 ---
 
-## Integración Lightning Network
+## Lightning Network Integration
 
-### Motores Modernos (Recomendado para Pay-to-Play)
+### Modern Engines (Recommended for Pay-to-Play)
 
-1.  **Phoenixd**: Ideal si ya corres `phoenixd` localmente. Gestión automática de canales.
-2.  **Breez SDK (Liquid)**: Experiencia "nodeless" usando Liquid Network. Sin canales.
-3.  **Money Dev Kit (MDK)**: Opción en la nube, zero-config.
-
-### Métodos Legado (Solo para modo Manual)
-
-- **NWC (Nostr Wallet Connect)**: Conecta tu wallet (Alby, Zeus) vía Nostr.
-- **LND REST**: Conexión directa a tu nodo LND.
+1.  **Phoenixd**: Ideal if you already run `phoenixd` locally. Automated channel management.
 
 ---
 
-## Variables de entorno principales
+## Main Environment Variables
 
 ```env
-ENTRY_FEE_SATS=2100            # Costo de entrada (0 = Manual)
-PAYOUT_FEE_RESERVE_SATS=10     # Reserva del pozo para fees de payout
+ENTRY_FEE_SATS=2100            # Entry cost (0 = Manual)
+PAYOUT_FEE_RESERVE_SATS=20     # Pool sats reserved for routing fees
 LN_ENGINE=phoenixd             # none, phoenixd, breez-liquid, mdk
 
-# Config Phoenixd
-PHOENIXD_URL=http://localhost:9740
-PHOENIXD_API_KEY=tu_password_aqui
-
-# Config Breez Liquid
-BREEZ_API_KEY=tu_breez_api_key
-BREEZ_MNEMONIC=tus_12_palabras...
-```
+# Phoenixd Config
+PHOENIXD_URL=http://127.0.0.1:9740
+PHOENIXD_API_KEY=your_password_here
 
 ---
 
-## Estructura del proyecto
+## Project Structure
 
 ```
 bitcoin-quiz-live/
@@ -107,22 +91,21 @@ bitcoin-quiz-live/
 │   ├── pool.test.js     Prize pool logic validation
 │   ├── phoenixd.test.js Mocked API tests
 │   └── ...
-└── PLAN.md              Implementation roadmap
 ```
 
 ---
 
-## Pendientes / Hoja de ruta
+## Roadmap / Pending Tasks
 
-### Conectividad Lightning
+### Lightning Connectivity
 
-- [x] **Pool de sats para premios** — Los participantes pagan su entrada para fondear el premio.
-- [x] **Pagos automáticos** — El servidor paga directamente al ganador al finalizar.
-- [ ] **Soporte BOLT12** — Permitir que el ganador cobre vía oferta estática (en phoenixd).
-- [ ] **Zaps de Nostr** — Fondeo externo del pool vía Nostr.
+- [x] **Prize Pool** — Participants pay to fund the prize.
+- [x] **Automated Payouts** — Server pays the winner directly.
+- [ ] **BOLT12 Support** — Allow winner to claim via static offer (on phoenixd).
+- [ ] **Nostr Zaps** — External pool funding via Nostr.
 
 ---
 
-## Licencia
+## License
 
-GNU General Public License v3.0. Software libre — contribuciones bienvenidas.
+GNU General Public License v3.0. Free software — contributions welcome.
