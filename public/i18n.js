@@ -229,5 +229,3 @@ function initLang() {
     btn.addEventListener('click', () => applyLang(currentLang === 'es' ? 'en' : 'es'));
   });
 }
-;
-}
