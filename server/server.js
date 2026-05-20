@@ -220,7 +220,7 @@ io.on("connection", (socket) => {
 
     if (result.paymentRequired) {
       const invoice = await lightning.createInvoice(result.entryFee, `Join Quiz: ${nickname}`);
-      if (invoice.success) {
+      if (invoice.success && invoice.paymentRequest) {
         console.log(`[Payment] Invoice for ${nickname}: ${invoice.paymentHash}`);
         const p = quizEngine.addPendingPlayer(roomCode, nickname, socket.id, invoice.paymentHash, invoice.paymentRequest);
         socket.emit("payment_required", {
@@ -231,7 +231,7 @@ io.on("connection", (socket) => {
         startSettlementCheck(socket, roomCode, invoice.paymentHash);
         return;
       }
-      return socket.emit("join_error", { message: "Error al generar factura." });
+      return socket.emit("join_error", { message: "Error al generar factura de entrada (Lightning no disponible)." });
     }
 
     if (result.error) return socket.emit("join_error", { message: result.error });
@@ -241,9 +241,25 @@ io.on("connection", (socket) => {
 
     const room = quizEngine.getRoom(roomCode);
     if (room) {
+      // Notify host
       io.to(room.hostSocketId).emit("player_joined", {
         players: quizEngine.getPlayers(roomCode).map(p => ({ id: p.id, nickname: p.nickname, score: p.score }))
       });
+
+      // Re-sync if game is in progress
+      if (room.state === "question") {
+        const question = room.questions[room.currentQuestionIndex];
+        const elapsed = (Date.now() - room.questionStartTime) / 1000;
+        const remaining = Math.max(0, TIME_LIMIT - elapsed);
+        socket.emit("question_started", {
+          index: room.currentQuestionIndex,
+          total: room.questions.length,
+          text: question.text,
+          options: question.options,
+          timeLimit: remaining,
+          alreadyAnswered: room.currentAnswers.has(result.playerId)
+        });
+      }
     }
   });
 
@@ -375,9 +391,8 @@ async function finishQuiz(roomCode) {
         feeReserveSat, winnerNickname: winner.nickname 
       };
     } else {
-      const memo = `Winner: ${winner.nickname} (${winner.score} pts)`;
-      rewardInfo = await lightning.createInvoice(satAmount, memo);
-      Object.assign(rewardInfo, { satAmount, winnerNickname: winner.nickname, winnerScore: winner.score });
+      // Manual Mode (Free to play)
+      rewardInfo = { manual: true, satAmount, winnerNickname: winner.nickname, winnerScore: winner.score };
     }
   }
 
